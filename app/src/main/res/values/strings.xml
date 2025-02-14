@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">WeatherSeer</string>
+    <string name="cityState">St. Paul, MN</string>
+
 </resources>
