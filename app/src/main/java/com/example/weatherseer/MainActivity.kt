@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +24,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -87,12 +85,14 @@ fun FirstScreen() {
             ) {
                 Row() {
                     Text(
-                        text = "72°",
+                        text = stringResource(R.string.temp),
                         fontSize = 72.sp
                     )
                 }
                 Row() {
-                    Text("Feels like 78°")
+                    Text(
+                        text = stringResource(R.string.feelsTemp)
+                    )
                 }
 
             } // Image
@@ -105,7 +105,7 @@ fun FirstScreen() {
 
                 Image(
                     painterResource(R.drawable.sunny),
-                    "Sunny",
+                    contentDescription = stringResource(R.string.sunny),
                     modifier = Modifier
                         .height(80.dp)
                         .width(80.dp)
@@ -114,20 +114,28 @@ fun FirstScreen() {
             }
         }
         Row() {
-            Row(
-                modifier = Modifier.padding(20.dp).background(Color.Magenta)
+            Column(
+                modifier = Modifier.padding(30.dp)
             ) {
                 Text(
-                    text = "Low 65°"
+                    text = stringResource(R.string.low),
+                    fontSize = 18.sp
+                )
+                Text(
+                    text = stringResource(R.string.high),
+                    fontSize = 18.sp
+                )
+                Text(
+                    text = stringResource(R.string.humidity),
+                    fontSize = 18.sp
+                )
+                Text(
+                    text = stringResource(R.string.pressure),
+                    fontSize = 18.sp
                 )
             }
         }
-
-
     }
-
-
-
 }
 
 
