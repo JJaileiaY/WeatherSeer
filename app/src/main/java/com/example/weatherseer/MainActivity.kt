@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -50,94 +51,123 @@ fun FirstScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-    ) { // App Title
-        Row() {
-            Text(
-                text = stringResource(R.string.app_name),
-                modifier = Modifier
-                    .background(Color.LightGray)
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                fontSize = 20.sp,
-            )
-        } //City and State
-        Row() {
-            Text(
-                text = stringResource(R.string.cityState),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-                textAlign = TextAlign.Center,
-                fontSize = 20.sp,
-            )
-        } // Row for Temp and Image
+            .padding(top = 40.dp)
+    ) {
+        AppTitle()      // App Title
+        CityState()     // City and State
+
+        // Row for Temp and Image
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(110.dp),
                 horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            Temperature()   // Temperature
+            SunnyImg()      // Sun Image
+        }
+        TempDetails()      // Details
+    }
+}
 
-        ) { // Temp
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight(),
+// Create the App Title
+@Composable
+fun AppTitle() {
+    Row() {
+        Text(
+            text = stringResource(R.string.app_name),
+            modifier = Modifier
+                .background(Color.LightGray)
+                .fillMaxWidth()
+                .padding(18.dp),
+            fontSize = 20.sp,
+        )
+    }
+}
 
-            ) {
-                Row() {
-                    Text(
-                        text = stringResource(R.string.temp),
-                        fontSize = 72.sp
-                    )
-                }
-                Row() {
-                    Text(
-                        text = stringResource(R.string.feelsTemp)
-                    )
-                }
+// Create the City State
+@Composable
+fun CityState() {
+    Row() {
+        Text(
+            text = stringResource(R.string.cityState),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            textAlign = TextAlign.Center,
+            fontSize = 20.sp,
+        )
+    }
+}
 
-            } // Image
-            Column(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(100.dp)
-            ) {
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Image(
-                    painterResource(R.drawable.sunny),
-                    contentDescription = stringResource(R.string.sunny),
-                    modifier = Modifier
-                        .height(80.dp)
-                        .width(80.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
-            }
+// Create the Temperature
+@Composable
+fun Temperature() {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight(),
+    ) {
+        Row() {
+            Text(
+                text = stringResource(R.string.temp),
+                fontSize = 72.sp
+            )
         }
         Row() {
-            Column(
-                modifier = Modifier.padding(30.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.low),
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = stringResource(R.string.high),
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = stringResource(R.string.humidity),
-                    fontSize = 18.sp
-                )
-                Text(
-                    text = stringResource(R.string.pressure),
-                    fontSize = 18.sp
-                )
-            }
+            Text(
+                text = stringResource(R.string.feelsTemp)
+            )
         }
     }
 }
 
+// Create the Image
+@Composable
+fun SunnyImg() {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(100.dp)
+    ) {
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Image(
+            painterResource(R.drawable.sunny),
+            contentDescription = stringResource(R.string.sunny),
+            modifier = Modifier
+                .height(80.dp)
+                .width(80.dp)
+                .align(Alignment.CenterHorizontally)
+        )
+    }
+}
+
+// Create the Details of the Temperature
+@Composable
+fun TempDetails() {
+    Row() {
+        Column(
+            modifier = Modifier.padding(30.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.low),
+                fontSize = 18.sp
+            )
+            Text(
+                text = stringResource(R.string.high),
+                fontSize = 18.sp
+            )
+            Text(
+                text = stringResource(R.string.humidity),
+                fontSize = 18.sp
+            )
+            Text(
+                text = stringResource(R.string.pressure),
+                fontSize = 18.sp
+            )
+        }
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
