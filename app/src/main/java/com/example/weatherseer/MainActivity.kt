@@ -28,17 +28,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import com.example.weatherseer.ui.theme.WeatherSeerTheme
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val weatherViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
         setContent {
             WeatherSeerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    FirstScreen()
+                    FirstScreen(weatherViewModel)
                 }
             }
         }
@@ -46,14 +47,15 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun FirstScreen() {
+fun FirstScreen(viewModel: WeatherViewModel) {
+    viewModel.getData("Chicago")
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 40.dp)
     ) {
         AppTitle()      // App Title
-        CityState()     // City and State
+        CityState()//Pass each description after getData? or .getData(city) here?)     // City and State
 
         // Row for Temp and Image
         Row(
@@ -172,6 +174,6 @@ fun TempDetails() {
 @Composable
 fun FirstScreenPreview() {
     WeatherSeerTheme {
-        FirstScreen()
+        //FirstScreen(weatherViewModel)
     }
 }
