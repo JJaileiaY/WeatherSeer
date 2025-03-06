@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,12 +50,26 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun FirstScreen(viewModel: WeatherViewModel) {
+
     viewModel.getData("Chicago")
+    val weatherResult = viewModel.weatherResult.observeAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 40.dp)
     ) {
+        when(val result = weatherResult.value) {
+            is NetworkResponse.Error -> {
+                Text(text = result.message)
+            }
+            is NetworkResponse.Success -> {
+                Text(text = result.data.toString())
+            }
+            null -> {}
+        }
+
+        /**
         AppTitle()      // App Title
         CityState()//Pass each description after getData? or .getData(city) here?)     // City and State
 
@@ -68,6 +84,7 @@ fun FirstScreen(viewModel: WeatherViewModel) {
             SunnyImg()      // Sun Image
         }
         TempDetails()      // Details
+        **/
     }
 }
 
@@ -170,10 +187,12 @@ fun TempDetails() {
     }
 }
 
+/**
 @Preview(showBackground = true)
 @Composable
 fun FirstScreenPreview() {
     WeatherSeerTheme {
-        //FirstScreen(weatherViewModel)
+        FirstScreen(weatherViewModel)
     }
 }
+        **/

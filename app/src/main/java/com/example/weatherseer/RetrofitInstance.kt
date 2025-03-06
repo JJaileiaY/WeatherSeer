@@ -20,11 +20,13 @@ object RetrofitInstance {
             .addInterceptor(logging)
             .build()
 
+        val retroJson = Json {ignoreUnknownKeys = true}
+
         return Retrofit.Builder()
             .baseUrl(BASEURL)
             .client(client)
             .addConverterFactory(
-                Json.asConverterFactory(
+                retroJson.asConverterFactory(
                 "application/json".toMediaType()))
             .build()
     }

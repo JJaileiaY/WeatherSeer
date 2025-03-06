@@ -10,9 +10,9 @@ data class WeatherMetaData(
     val base: String,
     val main: Main,
     val visibility: Int,
-    val wind: Wind,
-    val rain: Rain,
-    val clouds: Clouds,
+    val wind: Wind? = null,
+    val rain: Rain? = null,
+    val clouds: Clouds? = null,
     val dt: Int,
     val sys: Sys,
     val timezone: Int,
@@ -23,8 +23,8 @@ data class WeatherMetaData(
 
 @Serializable
 data class Coord(
-    val lon: Float,
-    val lat: Float
+    val lon: Double,
+    val lat: Double
 )
 
 @Serializable
@@ -37,37 +37,37 @@ data class Weather(
 
 @Serializable
 data class Main(
-    val temp: Float,
+    val temp: Double,
     @SerialName("feels_like")
-    val feelsLike: Float,
+    val feelsLike: Double,
     @SerialName("temp_min")
-    val tempMin: Float,
+    val tempMin: Double,
     @SerialName("temp_max")
-    val tempMax: Float,
+    val tempMax: Double,
     val humidity: Int,
     val pressure: Int,
     @SerialName("sea_level")
-    val seaLevel: Int,
+    val seaLevel: Int? = null,
     @SerialName("grnd_level")
-    val grndLevel: Int
+    val grndLevel: Int? = null
 )
 
 @Serializable
 data class Wind(
-    val speed: Float,
-    val deg: Int,
-    val gust: Float
+    val speed: Double? = null,
+    val deg: Int? = null,
+    val gust: Double? = null
 )
 
 @Serializable
 data class Rain(
     @SerialName("1h")
-    val oneh: Float
+    val oneh: Double? = null
 )
 
 @Serializable
 data class Clouds(
-    val all: Int
+    val all: Int? = null
 )
 
 @Serializable
