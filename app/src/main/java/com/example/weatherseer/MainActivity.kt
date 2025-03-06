@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
@@ -51,7 +49,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun FirstScreen(viewModel: WeatherViewModel) {
 
-    viewModel.getData("Chicago")
+    // Fetch Weather Data
+    viewModel.GetQueryInfo()
+    viewModel.getData(stringResource(R.string.city))
     val weatherResult = viewModel.weatherResult.observeAsState()
 
     Column(
@@ -59,39 +59,38 @@ fun FirstScreen(viewModel: WeatherViewModel) {
             .fillMaxSize()
             .padding(top = 40.dp)
     ) {
+        AppTitle()      // App Title
+
+        // Evaluate Weather Data
         when(val result = weatherResult.value) {
             is NetworkResponse.Error -> {
                 Text(text = result.message)
             }
             is NetworkResponse.Success -> {
-                Text(text = result.data.toString())
+                CityState(result.data.name, result.data.sys.country)        // City and Country
+
+                // Row for Temp and Image
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp),
+                    horizontalArrangement = Arrangement.SpaceAround
+                ) {
+                    Temperature(result.data.main.temp, result.data.main.feelsLike)   // Temperature
+                    SunnyImg()          // Sun Image
+                }
+                // Temp Details
+                TempDetails(result.data.main.tempMin,result.data.main.tempMax, result.data.main.humidity, result.data.main.pressure)
             }
             null -> {}
         }
-
-        /**
-        AppTitle()      // App Title
-        CityState()//Pass each description after getData? or .getData(city) here?)     // City and State
-
-        // Row for Temp and Image
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(110.dp),
-                horizontalArrangement = Arrangement.SpaceAround
-        ) {
-            Temperature()   // Temperature
-            SunnyImg()      // Sun Image
-        }
-        TempDetails()      // Details
-        **/
     }
 }
 
 // Create the App Title
 @Composable
 fun AppTitle() {
-    Row() {
+    Row {
         Text(
             text = stringResource(R.string.app_name),
             modifier = Modifier
@@ -103,12 +102,12 @@ fun AppTitle() {
     }
 }
 
-// Create the City State
+// Create the City and Country
 @Composable
-fun CityState() {
-    Row() {
+fun CityState(city: String, country: String) {
+    Row {
         Text(
-            text = stringResource(R.string.cityState),
+            text = city + stringResource(R.string.comma) + country,
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(18.dp),
@@ -120,20 +119,20 @@ fun CityState() {
 
 // Create the Temperature
 @Composable
-fun Temperature() {
+fun Temperature(temp: Double, feelsTemp: Double) {
     Column(
         modifier = Modifier
             .fillMaxHeight(),
     ) {
-        Row() {
+        Row {
             Text(
-                text = stringResource(R.string.temp),
-                fontSize = 72.sp
+                text = temp.toString() + stringResource(R.string.degree),
+                fontSize = 62.sp
             )
         }
-        Row() {
+        Row {
             Text(
-                text = stringResource(R.string.feelsTemp)
+                text = stringResource(R.string.feelsTemp) + feelsTemp.toString() + stringResource(R.string.degree)
             )
         }
     }
@@ -162,37 +161,27 @@ fun SunnyImg() {
 
 // Create the Details of the Temperature
 @Composable
-fun TempDetails() {
-    Row() {
+fun TempDetails(low: Double, high: Double, humidity: Int, pressure: Int) {
+    Row {
         Column(
             modifier = Modifier.padding(30.dp)
         ) {
             Text(
-                text = stringResource(R.string.low),
+                text = stringResource(R.string.low) + low.toString() + stringResource(R.string.degree),
                 fontSize = 18.sp
             )
             Text(
-                text = stringResource(R.string.high),
+                text = stringResource(R.string.high) + high.toString() + stringResource(R.string.degree),
                 fontSize = 18.sp
             )
             Text(
-                text = stringResource(R.string.humidity),
+                text = stringResource(R.string.humidity) + humidity.toString() + stringResource(R.string.percent),
                 fontSize = 18.sp
             )
             Text(
-                text = stringResource(R.string.pressure),
+                text = stringResource(R.string.pressure) + pressure.toString() + stringResource(R.string.hPa),
                 fontSize = 18.sp
             )
         }
     }
 }
-
-/**
-@Preview(showBackground = true)
-@Composable
-fun FirstScreenPreview() {
-    WeatherSeerTheme {
-        FirstScreen(weatherViewModel)
-    }
-}
-        **/

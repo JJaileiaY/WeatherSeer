@@ -3,6 +3,7 @@ package com.example.weatherseer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+// Class for a Weather Object
 @Serializable
 data class WeatherMetaData(
     val coord: Coord,

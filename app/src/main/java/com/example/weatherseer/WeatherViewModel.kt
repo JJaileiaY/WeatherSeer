@@ -1,6 +1,7 @@
 package com.example.weatherseer
 
-import android.util.Log
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,29 +10,38 @@ import kotlinx.coroutines.launch
 
 class WeatherViewModel: ViewModel() {
 
+    // LiveData variables
     private val weatherService = RetrofitInstance.weatherService
     private val _weatherResult = MutableLiveData<NetworkResponse<WeatherMetaData>>()
     val weatherResult: LiveData<NetworkResponse<WeatherMetaData>> = _weatherResult
 
+    // Variables to hold query info.
+    private var apiKey = ""
+    private var units = ""
+    private var errMessage = ""
+
+    @Composable
+    fun GetQueryInfo() {
+        apiKey = stringResource(R.string.apiKey)
+        units = stringResource(R.string.units)
+        errMessage = stringResource(R.string.errMessage)
+    }
+
+    // Get the weather data, determine if success or not.
     fun getData(city: String){
 
         viewModelScope.launch {
             try {
-                Log.i("In Try Block:", "Before Response")
-                val response = weatherService.getWeather("Chicago", "21c5d48b8f5a5f7d5a438d98819ab5a0", "imperial")
-                Log.i("Passed Response:", "Before If")
+                val response = weatherService.getWeather(city, apiKey, units)
                 if(response.isSuccessful) {
                     response.body()?.let {
                         _weatherResult.value = NetworkResponse.Success(it)
-                        Log.i("Response:", _weatherResult.toString())
                     }
                 } else {
-                    _weatherResult.value = NetworkResponse.Error("Couldn't find the data you are looking for.")
-                    Log.i("Not Success:", "In the Else")
+                    _weatherResult.value = NetworkResponse.Error(errMessage)
                 }
             } catch (e: Exception) {
-                _weatherResult.value = NetworkResponse.Error("Couldn't find the data you are looking for.")
-                Log.i("Exception Thrown:", "In the Catch")
+                _weatherResult.value = NetworkResponse.Error(errMessage)
             }
         }
     }

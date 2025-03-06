@@ -7,6 +7,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 
+// Retrofit object to fetch and parse JSON/Weather data.
 object RetrofitInstance {
 
     private const val BASEURL = "https://api.openweathermap.org/data/2.5/"
