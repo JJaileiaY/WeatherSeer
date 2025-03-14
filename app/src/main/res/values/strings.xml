@@ -1,11 +1,17 @@
 <resources>
     <string name="app_name">WeatherSeer</string>
-    <string name="cityState">St. Paul, MN</string>
-    <string name="temp">72°</string>
-    <string name="feelsTemp">Feels like 78°</string>
+    <string name="apiKey">21c5d48b8f5a5f7d5a438d98819ab5a0</string>
+    <string name="units">imperial</string>
+    <string name="city">saint paul</string>
+    <string name="errMessage">Couldn\'t find what you were looking for.</string>
+    <string name="comma">," "</string>
+    <string name="degree">°</string>
+    <string name="percent">%</string>
+    <string name="hPa">" "hPa</string>
+    <string name="feelsTemp">Feels like" "</string>
     <string name="sunny">Sunny</string>
-    <string name="low">Low 65°</string>
-    <string name="high">High 80°</string>
-    <string name="humidity">Humidity 100%</string>
-    <string name="pressure">Pressure 1023 hPa</string>
+    <string name="low">Low" "</string>
+    <string name="high">High" "</string>
+    <string name="humidity">Humidity" "</string>
+    <string name="pressure">Pressure" "</string>
 </resources>
