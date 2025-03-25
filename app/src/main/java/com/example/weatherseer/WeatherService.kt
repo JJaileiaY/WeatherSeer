@@ -13,4 +13,13 @@ interface WeatherService {
         @Query("appid") apiKey: String,
         @Query("units") units: String
     ): Response<WeatherMetaData>
+
+    @GET("/data/2.5/forecast/daily")
+    suspend fun getForecast(
+        @Query("zip") zip: String,
+        @Query("appid") apiKey: String,
+        @Query("cnt") days: Int,
+        @Query("units") units: String
+    ): Response<ForecastMetaData>
+
 }
