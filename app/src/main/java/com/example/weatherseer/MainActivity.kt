@@ -16,7 +16,7 @@ import com.example.weatherseer.ui.theme.WeatherSeerTheme
 
 const val CURRENTSCREEN = "first_screen"
 const val FORECASTSCREEN = "forecast_screen"
-var zipcode: String = ""
+var zipcode: String = "55155"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

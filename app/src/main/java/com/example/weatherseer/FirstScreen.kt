@@ -1,5 +1,6 @@
 package com.example.weatherseer
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Text
@@ -26,8 +28,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,11 +41,10 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
 
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    viewModel.getData(stringResource(R.string.city))
+    viewModel.getData(zipcode)
     val weatherResult = viewModel.weatherResult.observeAsState()
 
-    ////////////// Get textbox to only be 5 numbers and numpad, send popup? error if bad zipcode
-    ////////// Ask if still hard-code city?, fix design especially for text and button
+    ////////// fix design especially for text and button
 
     Column(
         modifier = Modifier
@@ -67,7 +70,7 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
                     horizontalArrangement = Arrangement.SpaceAround
                 ) {
                     Temperature(result.data.main.temp, result.data.main.feelsLike)   // Temperature
-                    SunnyImg()          // Sun Image
+                    WeatherIcon(result.data.weather[0].icon)          // Icon
                 }
                 // Temp Details
                 TempDetails(result.data.main.tempMin,result.data.main.tempMax, result.data.main.humidity, result.data.main.pressure)
@@ -80,27 +83,37 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
 @Composable
 fun TextButton(onNavigateForecastClicked: () -> Unit) {
     var zipEntry by remember { mutableStateOf("") }
+    val context = LocalContext.current
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         TextField(
             zipEntry,
-            onValueChange = {
-                zipEntry = it
+            onValueChange = { newZip ->
+                if (newZip.length <= 5 && newZip.all {it.isDigit()} ) zipEntry = newZip
+                else Toast.makeText(context, "Zipcode cannot be more than 5 digits", Toast.LENGTH_SHORT).show()
             },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
                 .height(56.dp),
             colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White)
         )
         Button(
-            onClick = { zipcode = zipEntry; onNavigateForecastClicked() },
+            onClick = {
+                if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
+                    Toast.makeText(context, "Invalid Zipcode", Toast.LENGTH_SHORT).show() }
+                else if (zipEntry.all {it.isDigit()} && zipEntry != "" && zipEntry.length == 5) {
+                    zipcode = zipEntry;
+                    onNavigateForecastClicked() } },
             colors = ButtonColors(
                 contentColor = Color.Black,
-                containerColor = Color.Transparent,
+                containerColor = Color.Gray,
                 disabledContentColor = Color.Transparent,
                 disabledContainerColor = Color.Transparent
             )
-        ) {}
+        ) {
+            Text("Search")
+        }
     }
 }
 
@@ -158,7 +171,7 @@ fun Temperature(temp: Double, feelsTemp: Double) {
 
 // Create the Image
 @Composable
-fun SunnyImg() {
+fun WeatherIcon(icon: String) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -167,8 +180,30 @@ fun SunnyImg() {
         Spacer(modifier = Modifier.height(10.dp))
 
         Image(
-            painterResource(R.drawable.sunny),
-            contentDescription = stringResource(R.string.sunny),
+            when (icon) {
+                "01d", "01n" -> painterResource(R.drawable.sunny)
+                "02d", "02n" -> painterResource(R.drawable.fewclouds)
+                "03d", "03n" -> painterResource(R.drawable.scatclouds)
+                "04d", "04n" -> painterResource(R.drawable.brokenclouds)
+                "09d", "09n" -> painterResource(R.drawable.showerrain)
+                "10d", "10n" -> painterResource(R.drawable.rain)
+                "11d", "11n" -> painterResource(R.drawable.storm)
+                "13d", "13n" -> painterResource(R.drawable.snow)
+                "50d", "50n" -> painterResource(R.drawable.mist)
+                else -> {painterResource(R.drawable.sunny)}
+            },
+            contentDescription = when (icon) {
+                "01d", "01n" -> stringResource(R.string.sunny)
+                "02d", "02n" -> stringResource(R.string.fewclouds)
+                "03d", "03n" -> stringResource(R.string.scatclouds)
+                "04d", "04n" -> stringResource(R.string.brokenclouds)
+                "09d", "09n" -> stringResource(R.string.showerrain)
+                "10d", "10n" -> stringResource(R.string.rain)
+                "11d", "11n" -> stringResource(R.string.storm)
+                "13d", "13n" -> stringResource(R.string.snow)
+                "50d", "50n" -> stringResource(R.string.mist)
+                else -> {stringResource(R.string.sunny)}
+            },
             modifier = Modifier
                 .height(80.dp)
                 .width(80.dp)

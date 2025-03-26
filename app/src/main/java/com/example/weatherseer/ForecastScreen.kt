@@ -35,7 +35,16 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
             .fillMaxWidth()
             .padding(top = 40.dp)
     ) {
-        Button(onClick = onNavigateBackClicked, colors = ButtonColors(
+        Button(onClick = {
+            when (forecastResult.value) {
+                is NetworkResponse.Error -> {
+                    zipcode = "55155";
+                    onNavigateBackClicked();
+                }
+                is NetworkResponse.Success -> onNavigateBackClicked()
+                null -> {}
+            } },
+            colors = ButtonColors(
             contentColor = Color.Black,
             containerColor = Color.Blue,
             disabledContentColor = Color.Transparent,

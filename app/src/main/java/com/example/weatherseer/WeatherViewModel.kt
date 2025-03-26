@@ -23,24 +23,24 @@ class WeatherViewModel: ViewModel() {
     val forecastResult: LiveData<NetworkResponse<ForecastMetaData>> = _forecastResult
 
     // Variables to hold query info.
-    private var apiKey = ""
+    private var appid = ""
     private var units = ""
     private var errMessage = ""
 
     /////////// How to get the zipcode in the text box?
     @Composable
     fun GetQueryInfo() {
-        apiKey = stringResource(R.string.apiKey)
+        appid = stringResource(R.string.apiKey)
         units = stringResource(R.string.units)
         errMessage = stringResource(R.string.errMessage)
     }
 
     // Get the weather data, determine if success or not.
-    fun getData(city: String){
+    fun getData(zip: String){
 
         viewModelScope.launch {
             try {
-                val response = weatherService.getWeather(city, apiKey, units)
+                val response = weatherService.getWeather(zip, appid, units)
                 if(response.isSuccessful) {
                     response.body()?.let {
                         _weatherResult.value = NetworkResponse.Success(it)
@@ -57,7 +57,7 @@ class WeatherViewModel: ViewModel() {
     fun getForecastData(zip: String) {
         viewModelScope.launch {
             try {
-                val response = weatherService.getForecast(zip, apiKey, days = 16, units)
+                val response = weatherService.getForecast(zip, appid, days = 16, units)
                 if(response.isSuccessful) {
                     response.body()?.let {
                         _forecastResult.value = NetworkResponse.Success(it)

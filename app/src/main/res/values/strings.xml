@@ -10,6 +10,14 @@
     <string name="hPa">" "hPa</string>
     <string name="feelsTemp">Feels like" "</string>
     <string name="sunny">Sunny</string>
+    <string name="fewclouds">Sunny</string>
+    <string name="scatclouds">Sunny</string>
+    <string name="brokenclouds">Sunny</string>
+    <string name="showerrain">Sunny</string>
+    <string name="rain">Sunny</string>
+    <string name="storm">Sunny</string>
+    <string name="snow">Sunny</string>
+    <string name="mist">Sunny</string>
     <string name="low">Low" "</string>
     <string name="high">High" "</string>
     <string name="humidity">Humidity" "</string>
