@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -27,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -50,6 +52,8 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 40.dp)
+            .background(Brush.verticalGradient(listOf(Color(0xFF640baa), Color(0xFF8f149e))))
+
     ) {
         AppTitle()             // App Title
         TextButton(onNavigateForecastClicked)    // Zipcode Entry and Button
@@ -84,8 +88,14 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
 fun TextButton(onNavigateForecastClicked: () -> Unit) {
     var zipEntry by remember { mutableStateOf("") }
     val context = LocalContext.current
+
+    Spacer(modifier = Modifier.height(20.dp))
+
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .height(50.dp)
     ) {
         TextField(
             zipEntry,
@@ -95,8 +105,10 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
-                .height(56.dp),
-            colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White)
+                .height(50.dp)
+                .padding(horizontal = 15.dp),
+            colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White),
+            shape = RoundedCornerShape(12.dp)
         )
         Button(
             onClick = {
@@ -106,8 +118,8 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
                     zipcode = zipEntry;
                     onNavigateForecastClicked() } },
             colors = ButtonColors(
-                contentColor = Color.Black,
-                containerColor = Color.Gray,
+                contentColor = Color.White,
+                containerColor = Color.Magenta,
                 disabledContentColor = Color.Transparent,
                 disabledContainerColor = Color.Transparent
             )
@@ -125,10 +137,12 @@ fun AppTitle() {
         Text(
             text = stringResource(R.string.app_name),
             modifier = Modifier
-                .background(Color.LightGray)
+                .background(Color(0xFFa121ca))
                 .fillMaxWidth()
                 .padding(18.dp),
             fontSize = 20.sp,
+            color = Color.White,
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -144,6 +158,7 @@ fun CityState(city: String, country: String) {
                 .padding(18.dp),
             textAlign = TextAlign.Center,
             fontSize = 20.sp,
+            color = Color.White
         )
     }
 }
@@ -158,12 +173,14 @@ fun Temperature(temp: Double, feelsTemp: Double) {
         Row {
             Text(
                 text = temp.toString() + stringResource(R.string.degree),
-                fontSize = 62.sp
+                fontSize = 62.sp,
+                color = Color.White
             )
         }
         Row {
             Text(
-                text = stringResource(R.string.feelsTemp) + feelsTemp.toString() + stringResource(R.string.degree)
+                text = stringResource(R.string.feelsTemp) + feelsTemp.toString() + stringResource(R.string.degree),
+                color = Color.White
             )
         }
     }
@@ -221,19 +238,23 @@ fun TempDetails(low: Double, high: Double, humidity: Int, pressure: Int) {
         ) {
             Text(
                 text = stringResource(R.string.low) + low.toString() + stringResource(R.string.degree),
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.White
             )
             Text(
                 text = stringResource(R.string.high) + high.toString() + stringResource(R.string.degree),
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.White
             )
             Text(
                 text = stringResource(R.string.humidity) + humidity.toString() + stringResource(R.string.percent),
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.White
             )
             Text(
                 text = stringResource(R.string.pressure) + pressure.toString() + stringResource(R.string.hPa),
-                fontSize = 18.sp
+                fontSize = 18.sp,
+                color = Color.White
             )
         }
     }
