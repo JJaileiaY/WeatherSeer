@@ -46,7 +46,9 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     viewModel.getData(zipcode)
     val weatherResult = viewModel.weatherResult.observeAsState()
 
-    ////////// fix design especially for text and button
+    //////// put details and temp in a similar box as forecast, make textbox shorter
+    /////// make temp numbers into ints, maybe put crystal ball image with icon inside
+    //// big at the bottom, externalize strings, maybe fix the Invalid Zipcode repeat
 
     Column(
         modifier = Modifier
@@ -140,7 +142,7 @@ fun AppTitle() {
                 .background(Color(0xFFa121ca))
                 .fillMaxWidth()
                 .padding(18.dp),
-            fontSize = 20.sp,
+            fontSize = 24.sp,
             color = Color.White,
             textAlign = TextAlign.Center
         )
