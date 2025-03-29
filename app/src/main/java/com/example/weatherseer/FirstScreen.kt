@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -46,9 +48,7 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     viewModel.getData(zipcode)
     val weatherResult = viewModel.weatherResult.observeAsState()
 
-    //////// put details and temp in a similar box as forecast, make textbox shorter
-    /////// make temp numbers into ints, maybe put crystal ball image with icon inside
-    //// big at the bottom, externalize strings, maybe fix the Invalid Zipcode repeat
+    ///// externalize strings, maybe fix the Invalid Zipcode repeat
 
     Column(
         modifier = Modifier
@@ -57,8 +57,9 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
             .background(Brush.verticalGradient(listOf(Color(0xFF640baa), Color(0xFF8f149e))))
 
     ) {
-        AppTitle()             // App Title
-        TextButton(onNavigateForecastClicked)    // Zipcode Entry and Button
+        // App Title, Search Bar and Button
+        AppTitle()
+        TextButton(onNavigateForecastClicked)
 
         // Evaluate Weather Data
         when(val result = weatherResult.value) {
@@ -68,24 +69,29 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
             is NetworkResponse.Success -> {
                 CityState(result.data.name, result.data.sys.country)        // City and Country
 
-                // Row for Temp and Image
+                // Row for Temperature and Details
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(110.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
+                        .height(140.dp)
+                        .padding(horizontal = 10.dp)
+                        .padding(top = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
+                    // Temperature and Details
                     Temperature(result.data.main.temp, result.data.main.feelsLike)   // Temperature
-                    WeatherIcon(result.data.weather[0].icon)          // Icon
+                    TempDetails(result.data.main.tempMin,result.data.main.tempMax, result.data.main.humidity, result.data.main.pressure)
                 }
-                // Temp Details
-                TempDetails(result.data.main.tempMin,result.data.main.tempMax, result.data.main.humidity, result.data.main.pressure)
+                // Description and Weather Icon
+                WeatherDescription(result.data.weather[0].description)
+                WeatherI(result.data.weather[0].icon)
             }
             null -> {}
         }
     }
 }
 
+// Create the Search Box and Button
 @Composable
 fun TextButton(onNavigateForecastClicked: () -> Unit) {
     var zipEntry by remember { mutableStateOf("") }
@@ -108,7 +114,8 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
                 .height(50.dp)
-                .padding(horizontal = 15.dp),
+                .width(300.dp)
+                .padding(horizontal = 25.dp),
             colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White),
             shape = RoundedCornerShape(12.dp)
         )
@@ -117,7 +124,7 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
                 if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
                     Toast.makeText(context, "Invalid Zipcode", Toast.LENGTH_SHORT).show() }
                 else if (zipEntry.all {it.isDigit()} && zipEntry != "" && zipEntry.length == 5) {
-                    zipcode = zipEntry;
+                    zipcode = zipEntry
                     onNavigateForecastClicked() } },
             colors = ButtonColors(
                 contentColor = Color.White,
@@ -126,11 +133,10 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
                 disabledContainerColor = Color.Transparent
             )
         ) {
-            Text("Search")
+            Text(stringResource(R.string.search))
         }
     }
 }
-
 
 // Create the App Title
 @Composable
@@ -168,96 +174,142 @@ fun CityState(city: String, country: String) {
 // Create the Temperature
 @Composable
 fun Temperature(temp: Double, feelsTemp: Double) {
-    Column(
-        modifier = Modifier
-            .fillMaxHeight(),
-    ) {
-        Row {
-            Text(
-                text = temp.toString() + stringResource(R.string.degree),
-                fontSize = 62.sp,
-                color = Color.White
-            )
-        }
-        Row {
-            Text(
-                text = stringResource(R.string.feelsTemp) + feelsTemp.toString() + stringResource(R.string.degree),
-                color = Color.White
-            )
-        }
-    }
-}
-
-// Create the Image
-@Composable
-fun WeatherIcon(icon: String) {
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxHeight()
-            .width(100.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0x60322390))
     ) {
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Image(
-            when (icon) {
-                "01d", "01n" -> painterResource(R.drawable.sunny)
-                "02d", "02n" -> painterResource(R.drawable.fewclouds)
-                "03d", "03n" -> painterResource(R.drawable.scatclouds)
-                "04d", "04n" -> painterResource(R.drawable.brokenclouds)
-                "09d", "09n" -> painterResource(R.drawable.showerrain)
-                "10d", "10n" -> painterResource(R.drawable.rain)
-                "11d", "11n" -> painterResource(R.drawable.storm)
-                "13d", "13n" -> painterResource(R.drawable.snow)
-                "50d", "50n" -> painterResource(R.drawable.mist)
-                else -> {painterResource(R.drawable.sunny)}
-            },
-            contentDescription = when (icon) {
-                "01d", "01n" -> stringResource(R.string.sunny)
-                "02d", "02n" -> stringResource(R.string.fewclouds)
-                "03d", "03n" -> stringResource(R.string.scatclouds)
-                "04d", "04n" -> stringResource(R.string.brokenclouds)
-                "09d", "09n" -> stringResource(R.string.showerrain)
-                "10d", "10n" -> stringResource(R.string.rain)
-                "11d", "11n" -> stringResource(R.string.storm)
-                "13d", "13n" -> stringResource(R.string.snow)
-                "50d", "50n" -> stringResource(R.string.mist)
-                else -> {stringResource(R.string.sunny)}
-            },
+        Column(
             modifier = Modifier
-                .height(80.dp)
-                .width(80.dp)
-                .align(Alignment.CenterHorizontally)
-        )
+                .fillMaxHeight()
+                .padding(15.dp)
+                .padding(horizontal = 20.dp)
+        ) {
+            Row {
+                Text(
+                    text = temp.toInt().toString() + stringResource(R.string.degree),
+                    fontSize = 62.sp,
+                    color = Color.White
+                )
+            }
+            Row {
+                Text(
+                    text = stringResource(R.string.feelsTemp) + feelsTemp.toInt()
+                        .toString() + stringResource(R.string.degree),
+                    color = Color.White
+                )
+            }
+        }
     }
 }
 
 // Create the Details of the Temperature
 @Composable
 fun TempDetails(low: Double, high: Double, humidity: Int, pressure: Int) {
-    Row {
+
+    Box(
+        modifier = Modifier
+            .fillMaxHeight()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0x60322390))
+    ) {
         Column(
-            modifier = Modifier.padding(30.dp)
+            modifier = Modifier.padding(15.dp)
         ) {
             Text(
-                text = stringResource(R.string.low) + low.toString() + stringResource(R.string.degree),
-                fontSize = 18.sp,
+                text = stringResource(R.string.low) + low.toInt()
+                    .toString() + stringResource(R.string.degree),
+                fontSize = 16.sp,
                 color = Color.White
             )
             Text(
-                text = stringResource(R.string.high) + high.toString() + stringResource(R.string.degree),
-                fontSize = 18.sp,
+                text = stringResource(R.string.high) + high.toInt().toString() + stringResource(
+                    R.string.degree
+                ),
+                fontSize = 16.sp,
                 color = Color.White
             )
             Text(
-                text = stringResource(R.string.humidity) + humidity.toString() + stringResource(R.string.percent),
-                fontSize = 18.sp,
+                text = stringResource(R.string.humidity) + humidity.toString() + stringResource(
+                    R.string.percent
+                ),
+                fontSize = 16.sp,
                 color = Color.White
             )
             Text(
-                text = stringResource(R.string.pressure) + pressure.toString() + stringResource(R.string.hPa),
-                fontSize = 18.sp,
+                text = stringResource(R.string.pressure) + pressure.toString() + stringResource(
+                    R.string.hPa
+                ),
+                fontSize = 16.sp,
                 color = Color.White
             )
+        }
+    }
+}
+
+@Composable
+fun WeatherDescription(desc: String) {
+    Column (
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Text(desc.capitalizeFirstLetter(),
+            fontSize = 24.sp,
+            color = Color.White,
+            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 50.dp)
+        )
+    }
+}
+
+@Composable
+fun WeatherI(icon: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(400.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxSize().align(Alignment.Bottom))
+        {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center )
+            {
+                Image(
+                    painterResource(R.drawable.crystalb),
+                    contentDescription = "Crystal Ball",
+                    modifier = Modifier.fillMaxSize().padding(top = 50.dp)
+                )
+                Image(
+                    when (icon) {
+                        "01d", "01n" -> painterResource(R.drawable.sunny)
+                        "02d", "02n" -> painterResource(R.drawable.fewclouds)
+                        "03d", "03n" -> painterResource(R.drawable.scatclouds)
+                        "04d", "04n" -> painterResource(R.drawable.brokenclouds)
+                        "09d", "09n" -> painterResource(R.drawable.showerrain)
+                        "10d", "10n" -> painterResource(R.drawable.rain)
+                        "11d", "11n" -> painterResource(R.drawable.storm)
+                        "13d", "13n" -> painterResource(R.drawable.snow)
+                        "50d", "50n" -> painterResource(R.drawable.mist)
+                        else -> {painterResource(R.drawable.sunny)}
+                    },
+                    contentDescription = when (icon) {
+                        "01d", "01n" -> stringResource(R.string.sunny)
+                        "02d", "02n" -> stringResource(R.string.fewclouds)
+                        "03d", "03n" -> stringResource(R.string.scatclouds)
+                        "04d", "04n" -> stringResource(R.string.brokenclouds)
+                        "09d", "09n" -> stringResource(R.string.showerrain)
+                        "10d", "10n" -> stringResource(R.string.rain)
+                        "11d", "11n" -> stringResource(R.string.storm)
+                        "13d", "13n" -> stringResource(R.string.snow)
+                        "50d", "50n" -> stringResource(R.string.mist)
+                        else -> {stringResource(R.string.sunny)}
+                    },
+                    modifier = Modifier
+                        .height(120.dp)
+                        .width(120.dp)
+                )
+            }
         }
     }
 }
