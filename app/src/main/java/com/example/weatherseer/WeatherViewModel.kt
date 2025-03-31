@@ -10,9 +10,6 @@ import kotlinx.coroutines.launch
 
 class WeatherViewModel: ViewModel() {
 
-    /////////////// Might have to put forecast in own viewmodel if it changes the current
-    /////// or weatherResults data when called.
-
     // LiveData variables
     private val weatherService = RetrofitInstance.weatherService
     private val _weatherResult = MutableLiveData<NetworkResponse<WeatherMetaData>>()
@@ -27,10 +24,9 @@ class WeatherViewModel: ViewModel() {
     private var units = ""
     private var errMessage = ""
 
-    /////////// How to get the zipcode in the text box?
     @Composable
     fun GetQueryInfo() {
-        appid = stringResource(R.string.apiKey)
+        appid = stringResource(R.string.appid)
         units = stringResource(R.string.units)
         errMessage = stringResource(R.string.errMessage)
     }
@@ -54,6 +50,7 @@ class WeatherViewModel: ViewModel() {
         }
     }
 
+    // Get the forecast data and determine if success or not.
     fun getForecastData(zip: String) {
         viewModelScope.launch {
             try {
@@ -69,7 +66,6 @@ class WeatherViewModel: ViewModel() {
                 _forecastResult.value = NetworkResponse.Error(errMessage)
             }
         }
-
     }
 }
 

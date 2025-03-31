@@ -14,8 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.weatherseer.ui.theme.WeatherSeerTheme
 
-const val CURRENTSCREEN = "first_screen"
-const val FORECASTSCREEN = "forecast_screen"
+// Default/Starter Zipcode
 var zipcode: String = "55155"
 
 class MainActivity : ComponentActivity() {
@@ -27,10 +26,14 @@ class MainActivity : ComponentActivity() {
         val weatherViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
         val forecastViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
 
+        val context = applicationContext
+        val currentScreen = context.getString(R.string.currentScreen)
+        val forecastScreen = context.getString(R.string.forecastScreen)
+
         setContent {
             WeatherSeerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    AppNavigation(weatherViewModel, forecastViewModel)
+                    AppNavigation(weatherViewModel, forecastViewModel, currentScreen, forecastScreen)
                 }
             }
         }
@@ -41,20 +44,22 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppNavigation(
     currentViewModel: WeatherViewModel,
-    forecastViewModel: WeatherViewModel
+    forecastViewModel: WeatherViewModel,
+    currentScreen: String,
+    forecastScreen: String
 ) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = CURRENTSCREEN) {
-        composable(CURRENTSCREEN) {
+    NavHost(navController = navController, startDestination = currentScreen) {
+        composable(currentScreen) {
             FirstScreen(
                 viewModel = currentViewModel,
                 onNavigateForecastClicked = {
-                    navController.navigate(FORECASTSCREEN)
+                    navController.navigate(forecastScreen)
                 }
             )
         }
-        composable(FORECASTSCREEN) {
+        composable(forecastScreen) {
             ForecastScreen(forecastViewModel, zipcode, onNavigateBackClicked= { navController.popBackStack() })
         }
     }

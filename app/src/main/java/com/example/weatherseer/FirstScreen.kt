@@ -48,8 +48,6 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     viewModel.getData(zipcode)
     val weatherResult = viewModel.weatherResult.observeAsState()
 
-    ///// externalize strings, maybe fix the Invalid Zipcode repeat
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -109,7 +107,7 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
             zipEntry,
             onValueChange = { newZip ->
                 if (newZip.length <= 5 && newZip.all {it.isDigit()} ) zipEntry = newZip
-                else Toast.makeText(context, "Zipcode cannot be more than 5 digits", Toast.LENGTH_SHORT).show()
+                else Toast.makeText(context, context.getString(R.string.toastLength), Toast.LENGTH_SHORT).show()
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
@@ -122,7 +120,7 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
         Button(
             onClick = {
                 if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
-                    Toast.makeText(context, "Invalid Zipcode", Toast.LENGTH_SHORT).show() }
+                    Toast.makeText(context, context.getString(R.string.toastInvalid), Toast.LENGTH_SHORT).show() }
                 else if (zipEntry.all {it.isDigit()} && zipEntry != "" && zipEntry.length == 5) {
                     zipcode = zipEntry
                     onNavigateForecastClicked() } },
@@ -195,8 +193,7 @@ fun Temperature(temp: Double, feelsTemp: Double) {
             }
             Row {
                 Text(
-                    text = stringResource(R.string.feelsTemp) + feelsTemp.toInt()
-                        .toString() + stringResource(R.string.degree),
+                    text = stringResource(R.string.feelsTemp) + feelsTemp.toInt().toString() + stringResource(R.string.degree),
                     color = Color.White
                 )
             }
@@ -218,29 +215,22 @@ fun TempDetails(low: Double, high: Double, humidity: Int, pressure: Int) {
             modifier = Modifier.padding(15.dp)
         ) {
             Text(
-                text = stringResource(R.string.low) + low.toInt()
-                    .toString() + stringResource(R.string.degree),
+                text = stringResource(R.string.low) + low.toInt().toString() + stringResource(R.string.degree),
                 fontSize = 16.sp,
                 color = Color.White
             )
             Text(
-                text = stringResource(R.string.high) + high.toInt().toString() + stringResource(
-                    R.string.degree
-                ),
+                text = stringResource(R.string.high) + high.toInt().toString() + stringResource(R.string.degree),
                 fontSize = 16.sp,
                 color = Color.White
             )
             Text(
-                text = stringResource(R.string.humidity) + humidity.toString() + stringResource(
-                    R.string.percent
-                ),
+                text = stringResource(R.string.humidity) + humidity.toString() + stringResource(R.string.percent),
                 fontSize = 16.sp,
                 color = Color.White
             )
             Text(
-                text = stringResource(R.string.pressure) + pressure.toString() + stringResource(
-                    R.string.hPa
-                ),
+                text = stringResource(R.string.pressure) + pressure.toString() + stringResource(R.string.hPa),
                 fontSize = 16.sp,
                 color = Color.White
             )
@@ -277,7 +267,7 @@ fun WeatherI(icon: String) {
             {
                 Image(
                     painterResource(R.drawable.crystalb),
-                    contentDescription = "Crystal Ball",
+                    contentDescription = stringResource(R.string.crystalBall),
                     modifier = Modifier.fillMaxSize().padding(top = 50.dp)
                 )
                 Image(

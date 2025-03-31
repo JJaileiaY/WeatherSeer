@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -41,20 +42,22 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
     viewModel.getForecastData(zip)
     val forecastResult = viewModel.forecastResult.observeAsState()
 
+    val context = LocalContext.current
+
     // Create Alert Dialog if zipcode not found
     var showZipNotFound by remember { mutableStateOf(false) }
     if (showZipNotFound) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("Zipcode Not Found") },
-            text = { Text("Sorry, the zipcode you entered was not found.") },
+            title = { Text(stringResource(R.string.alertTitle)) },
+            text = { Text(stringResource(R.string.alertMessage)) },
             confirmButton = {
                 Button(onClick = {
-                    zipcode = "55155"
+                    zipcode = context.getString(R.string.defaultZip)
                     showZipNotFound = false
                     onNavigateBackClicked()
                 }) {
-                    Text("OK")
+                    Text(stringResource(R.string.alertOk))
                 }
             },
             dismissButton = null
@@ -74,7 +77,7 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
                 onClick = {
                     when (forecastResult.value) {
                         is NetworkResponse.Error -> {
-                            zipcode = "55155"
+                            zipcode = context.getString(R.string.defaultZip)
                             onNavigateBackClicked()
                         }
                         is NetworkResponse.Success -> onNavigateBackClicked()
@@ -91,16 +94,15 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
                     .padding(horizontal = 20.dp)
                     .padding(top = 8.dp)
             ) {
-                Text("Back")
+                Text(stringResource(R.string.back))
             }
         }
-        // 16 Forecast Label
+        // 16 Forecast Title
         Column (
             modifier = Modifier
             .fillMaxWidth()
         ) {
-            Text(
-                "16-Day Weather Forecast",
+            Text(stringResource(R.string.forecastTitle),
                 fontSize = 24.sp,
                 color = Color.White,
                 modifier = Modifier
