@@ -6,76 +6,76 @@ import kotlinx.serialization.Serializable
 // Class for a Weather Object
 @Serializable
 data class WeatherMetaData(
-    val coord: Coord,
-    val weather: List<Weather>,
-    val base: String,
-    val main: Main,
-    val visibility: Int,
-    val wind: Wind? = null,
-    val rain: Rain? = null,
-    val clouds: Clouds? = null,
-    val dt: Int,
-    val sys: Sys,
-    val timezone: Int,
-    val id: Int,
-    val name: String,
-    val cod: Int
+    var coord: Coord,
+    var weather: List<Weather>,
+    var base: String,
+    var main: Main,
+    var visibility: Int,
+    var wind: Wind? = null,
+    var rain: Rain? = null,
+    var clouds: Clouds? = null,
+    var dt: Int,
+    var sys: Sys,
+    var timezone: Int,
+    var id: Int,
+    var name: String,
+    var cod: Int
 )
 
 @Serializable
 data class Coord(
-    val lon: Double,
-    val lat: Double
+    var lon: Double,
+    var lat: Double
 )
 
 @Serializable
 data class Weather(
-    val id: Int,
-    val main: String,
-    val description: String,
-    val icon: String
+    var id: Int,
+    var main: String,
+    var description: String,
+    var icon: String
 )
 
 @Serializable
 data class Main(
-    val temp: Double,
+    var temp: Double,
     @SerialName("feels_like")
-    val feelsLike: Double,
+    var feelsLike: Double,
     @SerialName("temp_min")
-    val tempMin: Double,
+    var tempMin: Double,
     @SerialName("temp_max")
-    val tempMax: Double,
-    val humidity: Int,
-    val pressure: Int,
+    var tempMax: Double,
+    var humidity: Int,
+    var pressure: Int,
     @SerialName("sea_level")
-    val seaLevel: Int? = null,
+    var seaLevel: Int? = null,
     @SerialName("grnd_level")
-    val grndLevel: Int? = null
+    var grndLevel: Int? = null
 )
 
 @Serializable
 data class Wind(
-    val speed: Double? = null,
-    val deg: Int? = null,
-    val gust: Double? = null
+    var speed: Double? = null,
+    var deg: Int? = null,
+    var gust: Double? = null
 )
 
 @Serializable
 data class Rain(
     @SerialName("1h")
-    val oneh: Double? = null
+    var oneh: Double? = null
 )
 
 @Serializable
 data class Clouds(
-    val all: Int? = null
+    var all: Int? = null
 )
 
 @Serializable
 data class Sys(
-    val type: Int,
-    val id: Int,
-    val country: String,
-    val sunrise: Int,
-    val sunset: Int
+    var type: Int,
+    var id: Int,
+    var country: String,
+    var sunrise: Int,
+    var sunset: Int
 )

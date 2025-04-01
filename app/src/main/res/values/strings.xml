@@ -1,17 +1,41 @@
 <resources>
     <string name="app_name">WeatherSeer</string>
-    <string name="apiKey">21c5d48b8f5a5f7d5a438d98819ab5a0</string>
+    <string name="appid">21c5d48b8f5a5f7d5a438d98819ab5a0</string>
     <string name="units">imperial</string>
-    <string name="city">saint paul</string>
+    <string name="currentScreen">first_screen</string>
+    <string name="forecastScreen">forecast_screen</string>
+
+    <string name="defaultZip">55155</string>
+    <string name="search">Search</string>
+    <string name="back">Back</string>
+    <string name="forecastTitle">16-Day Weather Forecast</string>
+
     <string name="errMessage">Couldn\'t find what you were looking for.</string>
+    <string name="toastLength">Zipcode cannot be more than 5 digits</string>
+    <string name="toastInvalid">Zipcode Not Found</string>
+    <string name="alertTitle">Zipcode Not Found</string>
+    <string name="alertMessage">Sorry, the zipcode you entered was not found.</string>
+    <string name="alertOk">OK</string>
+
     <string name="comma">," "</string>
     <string name="degree">°</string>
-    <string name="percent">%</string>
+    <string name="percent">%" "</string>
+    <string name="slash">/" "</string>
     <string name="hPa">" "hPa</string>
     <string name="feelsTemp">Feels like" "</string>
-    <string name="sunny">Sunny</string>
     <string name="low">Low" "</string>
     <string name="high">High" "</string>
     <string name="humidity">Humidity" "</string>
     <string name="pressure">Pressure" "</string>
+
+    <string name="crystalBall">Crystal Ball</string>
+    <string name="sunny">Sunny</string>
+    <string name="fewclouds">Few Clouds</string>
+    <string name="scatclouds">Scattered Clouds</string>
+    <string name="brokenclouds">Broken Clouds</string>
+    <string name="showerrain">Shower Rain</string>
+    <string name="rain">Rain</string>
+    <string name="storm">Storm</string>
+    <string name="snow">Snow</string>
+    <string name="mist">Mist</string>
 </resources>

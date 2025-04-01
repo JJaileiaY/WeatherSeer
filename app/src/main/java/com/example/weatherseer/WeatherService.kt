@@ -9,8 +9,17 @@ interface WeatherService {
 
     @GET("/data/2.5/weather")
     suspend fun getWeather(
-        @Query("q") city: String,
-        @Query("appid") apiKey: String,
+        @Query("zip") zip: String,
+        @Query("appid") appid: String,
         @Query("units") units: String
     ): Response<WeatherMetaData>
+
+    @GET("/data/2.5/forecast/daily")
+    suspend fun getForecast(
+        @Query("zip") zip: String,
+        @Query("appid") appid: String,
+        @Query("cnt") days: Int,
+        @Query("units") units: String
+    ): Response<ForecastMetaData>
+
 }
