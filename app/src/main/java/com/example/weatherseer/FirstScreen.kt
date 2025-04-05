@@ -1,6 +1,14 @@
 package com.example.weatherseer
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Text
@@ -39,6 +48,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
 
 @Composable
 fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Unit) {
@@ -47,6 +58,71 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     viewModel.GetQueryInfo()
     viewModel.getData(zipcode)
     val weatherResult = viewModel.weatherResult.observeAsState()
+
+    val context = LocalContext.current
+    var hasLocation: Boolean = false
+    var hasNotification: Boolean = false
+    var showRationale: Boolean = false
+
+
+    ///////// How to call compose function in OnClick() to call LocationGranted(), may need to add
+    ///// another function in API calls to use long and lat, how to make it display current location
+    //// vs zipcode location data, how to get rationale to show-maybe in launcher.launch?
+    ///// Add notification permissions and make notification persist and open app when clicked
+
+
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        when {
+            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
+                //getWeatherData()
+                hasLocation = true
+            }
+
+            else -> {
+                showRationale = true
+            }
+        }
+    }
+
+    if (showRationale) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.rationaleTitle)) },
+            text = { Text(stringResource(R.string.rationaleMessage)) },
+            confirmButton = {
+                Button(onClick = {
+                    showRationale = false
+                    CheckPermission(context, locationPermissionLauncher)
+                }) {
+                    Text(stringResource(R.string.alertOk))
+                }
+            },
+            dismissButton = null
+        )
+    }
+
+    if (hasLocation) {
+        // create service here and listener, get lat and long, call API, display using this data.
+        LocationGranted()
+    }
+
+
+    /**
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { isGranted ->
+            if (isGranted) {
+                hasLocation = true
+            } else {
+                showRationale = true
+            }
+        }
+    )
+
+**/
 
     Column(
         modifier = Modifier
@@ -57,7 +133,33 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     ) {
         // App Title, Search Bar and Button
         AppTitle()
-        TextButton(onNavigateForecastClicked)
+
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .height(80.dp)
+                .padding(top = 10.dp)
+        ) {
+            TextButton(onNavigateForecastClicked)
+            Button(
+                onClick = {
+                    CheckPermission(context, locationPermissionLauncher)
+                },
+                colors = ButtonColors(
+                    contentColor = Color.White,
+                    containerColor = Color.Magenta,
+                    disabledContentColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                ),
+                modifier = Modifier.padding(horizontal = 15.dp).height(40.dp)
+            ) {
+                Image(
+                    painterResource(R.drawable.location),
+                    contentDescription = "Location"
+                )
+            }
+        }
 
         // Evaluate Weather Data
         when(val result = weatherResult.value) {
@@ -89,6 +191,37 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     }
 }
 
+//@Composable
+private fun CheckPermission(context: Context, launcher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>) {
+    when {
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED -> {
+            //LocationGranted()
+        }
+        else -> {
+            launcher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+}
+
+@SuppressLint("MissingPermission")
+@Composable
+fun LocationGranted() {
+
+    val context = LocalContext.current
+    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+
+    fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+        location?.let {
+            //getData(it.latitude, it.longitude)
+        }
+    }
+}
+
 // Create the Search Box and Button
 @Composable
 fun TextButton(onNavigateForecastClicked: () -> Unit) {
@@ -97,12 +230,6 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    Row(
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .height(50.dp)
-    ) {
         TextField(
             zipEntry,
             onValueChange = { newZip ->
@@ -112,8 +239,8 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
                 .height(50.dp)
-                .width(300.dp)
-                .padding(horizontal = 25.dp),
+                .width(210.dp)
+                .padding(horizontal = 20.dp),
             colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White),
             shape = RoundedCornerShape(12.dp)
         )
@@ -133,7 +260,7 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
         ) {
             Text(stringResource(R.string.search))
         }
-    }
+
 }
 
 // Create the App Title
@@ -247,7 +374,9 @@ fun WeatherDescription(desc: String) {
         Text(desc.capitalizeFirstLetter(),
             fontSize = 24.sp,
             color = Color.White,
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 50.dp)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = 50.dp)
         )
     }
 }
@@ -259,7 +388,9 @@ fun WeatherI(icon: String) {
             .fillMaxWidth()
             .height(400.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize().align(Alignment.Bottom))
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .align(Alignment.Bottom))
         {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -268,7 +399,9 @@ fun WeatherI(icon: String) {
                 Image(
                     painterResource(R.drawable.crystalb),
                     contentDescription = stringResource(R.string.crystalBall),
-                    modifier = Modifier.fillMaxSize().padding(top = 50.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 50.dp)
                 )
                 Image(
                     when (icon) {

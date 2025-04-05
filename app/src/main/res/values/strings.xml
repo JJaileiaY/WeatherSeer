@@ -16,6 +16,8 @@
     <string name="alertTitle">Zipcode Not Found</string>
     <string name="alertMessage">Sorry, the zipcode you entered was not found.</string>
     <string name="alertOk">OK</string>
+    <string name="rationaleTitle">Please allow Permission for Location and Notification</string>
+    <string name="rationaleMessage">Location and Notification permissions are needed in order to find the weather for your current location.</string>
 
     <string name="comma">," "</string>
     <string name="degree">°</string>
