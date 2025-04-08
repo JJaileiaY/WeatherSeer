@@ -22,4 +22,22 @@ interface WeatherService {
         @Query("units") units: String
     ): Response<ForecastMetaData>
 
+
+    @GET("/data/2.5/weather")
+    suspend fun getWeatherLL(
+        @Query("lat") lat: Double,
+        @Query("lon") lon: Double,
+        @Query("appid") appid: String,
+        @Query("units") units: String
+    ): Response<WeatherMetaData>
+
+    @GET("/data/2.5/forecast/daily")
+    suspend fun getForecastLL(
+        @Query("lat") lat: Double,
+        @Query("lon") lon: Double,
+        @Query("appid") appid: String,
+        @Query("cnt") days: Int,
+        @Query("units") units: String
+    ): Response<ForecastMetaData>
+
 }

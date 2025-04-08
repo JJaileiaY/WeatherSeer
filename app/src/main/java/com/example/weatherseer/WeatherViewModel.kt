@@ -15,9 +15,16 @@ class WeatherViewModel: ViewModel() {
     private val _weatherResult = MutableLiveData<NetworkResponse<WeatherMetaData>>()
     val weatherResult: LiveData<NetworkResponse<WeatherMetaData>> = _weatherResult
 
-    // LiveData variables
     private val _forecastResult = MutableLiveData<NetworkResponse<ForecastMetaData>>()
     val forecastResult: LiveData<NetworkResponse<ForecastMetaData>> = _forecastResult
+
+    // LiveData variables for Lat and Lon
+    private val _weatherResultLL = MutableLiveData<NetworkResponse<WeatherMetaData>>()
+    val weatherResultLL: LiveData<NetworkResponse<WeatherMetaData>> = _weatherResultLL
+
+    private val _forecastResultLL = MutableLiveData<NetworkResponse<ForecastMetaData>>()
+    val forecastResultLL: LiveData<NetworkResponse<ForecastMetaData>> = _forecastResultLL
+
 
     // Variables to hold query info.
     private var appid = ""
@@ -32,7 +39,7 @@ class WeatherViewModel: ViewModel() {
     }
 
     // Get the weather data, determine if success or not.
-    fun getData(zip: String){
+    fun getData(zip: String) {
 
         viewModelScope.launch {
             try {
@@ -50,7 +57,7 @@ class WeatherViewModel: ViewModel() {
         }
     }
 
-    // Get the forecast data and determine if success or not.
+    // Get the forecast data, determine if success or not.
     fun getForecastData(zip: String) {
         viewModelScope.launch {
             try {
@@ -64,6 +71,45 @@ class WeatherViewModel: ViewModel() {
                 }
             } catch (e: Exception) {
                 _forecastResult.value = NetworkResponse.Error(errMessage)
+            }
+        }
+    }
+
+
+
+    // Get the weather data using Lat and Lon, determine if success or not.
+    fun getDataLL(lat: Double, lon: Double) {
+
+        viewModelScope.launch {
+            try {
+                val response = weatherService.getWeatherLL(lat, lon, appid, units)
+                if(response.isSuccessful) {
+                    response.body()?.let {
+                        _weatherResultLL.value = NetworkResponse.Success(it)
+                    }
+                } else {
+                    _weatherResultLL.value = NetworkResponse.Error(errMessage)
+                }
+            } catch (e: Exception) {
+                _weatherResultLL.value = NetworkResponse.Error(errMessage)
+            }
+        }
+    }
+
+    // Get the forecast data using Lat and Lon, determine if success or not.
+    fun getForecastDataLL(lat: Double, lon: Double) {
+        viewModelScope.launch {
+            try {
+                val response = weatherService.getForecastLL(lat, lon, appid, days = 16, units)
+                if(response.isSuccessful) {
+                    response.body()?.let {
+                        _forecastResultLL.value = NetworkResponse.Success(it)
+                    }
+                } else {
+                    _forecastResultLL.value = NetworkResponse.Error(errMessage)
+                }
+            } catch (e: Exception) {
+                _forecastResultLL.value = NetworkResponse.Error(errMessage)
             }
         }
     }

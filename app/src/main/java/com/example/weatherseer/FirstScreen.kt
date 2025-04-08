@@ -5,10 +5,13 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,6 +34,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -49,53 +54,56 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Unit) {
 
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    viewModel.getData(zipcode)
-    val weatherResult = viewModel.weatherResult.observeAsState()
+    //viewModel.getData(zipcode)
+    val weatherResult: State<NetworkResponse<WeatherMetaData>?>
 
     val context = LocalContext.current
-    var hasLocation: Boolean = false
-    var hasNotification: Boolean = false
-    var showRationale: Boolean = false
+    val hasLocation = remember {mutableStateOf(false)}
+    val hasNotification = remember {mutableStateOf(false)}
+    val showRationale = remember {mutableStateOf(false)}
 
 
-    ///////// How to call compose function in OnClick() to call LocationGranted(), may need to add
-    ///// another function in API calls to use long and lat, how to make it display current location
-    //// vs zipcode location data, how to get rationale to show-maybe in launcher.launch?
+    // how to use location service to update location etc.
+    ///// how to make it display current location vs zipcode location data,
+    // how to get rationale to show properly
     ///// Add notification permissions and make notification persist and open app when clicked
+    /// When hasLocation true, doesn't start up with location or go back to current screen with
+    // location, only updates when click button.
 
-
-
+// might not be working
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         when {
             permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                //getWeatherData()
-                hasLocation = true
+                hasLocation.value = true
             }
-
+            permissions.getOrDefault(Manifest.permission.POST_NOTIFICATIONS, false) -> {
+                hasNotification.value = true
+            }
             else -> {
-                showRationale = true
+                showRationale.value = true
             }
         }
     }
 
-    if (showRationale) {
+    if (showRationale.value) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text(stringResource(R.string.rationaleTitle)) },
             text = { Text(stringResource(R.string.rationaleMessage)) },
             confirmButton = {
                 Button(onClick = {
-                    showRationale = false
-                    CheckPermission(context, locationPermissionLauncher)
+                    showRationale.value = false
                 }) {
                     Text(stringResource(R.string.alertOk))
                 }
@@ -104,25 +112,15 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
         )
     }
 
-    if (hasLocation) {
-        // create service here and listener, get lat and long, call API, display using this data.
-        LocationGranted()
+    if (hasLocation.value) {
+        LocationGranted(viewModel)
+        weatherResult = viewModel.weatherResultLL.observeAsState()
+    }
+    else {
+        viewModel.getData(zipcode)
+        weatherResult = viewModel.weatherResult.observeAsState()
     }
 
-
-    /**
-    val locationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { isGranted ->
-            if (isGranted) {
-                hasLocation = true
-            } else {
-                showRationale = true
-            }
-        }
-    )
-
-**/
 
     Column(
         modifier = Modifier
@@ -141,10 +139,10 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
                 .height(80.dp)
                 .padding(top = 10.dp)
         ) {
-            TextButton(onNavigateForecastClicked)
+            TextButton(onNavigateForecastClicked, hasLocation)
             Button(
                 onClick = {
-                    CheckPermission(context, locationPermissionLauncher)
+                    checkPermission(context, locationPermissionLauncher, {hasLocation.value = true}) {showRationale.value = true}
                 },
                 colors = ButtonColors(
                     contentColor = Color.White,
@@ -191,40 +189,58 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     }
 }
 
-//@Composable
-private fun CheckPermission(context: Context, launcher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>) {
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun checkPermission(context: Context, launcher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>, showLocation: () -> Unit, showRationale: () -> Unit) {
     when {
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                 == PackageManager.PERMISSION_GRANTED -> {
-            //LocationGranted()
+                    showLocation()
         }
         else -> {
             launcher.launch(
                 arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
+                    Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.POST_NOTIFICATIONS)
             )
         }
+    }
+    // Show the Rationale
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+        == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+        == PackageManager.PERMISSION_DENIED) {
+        showRationale()
     }
 }
 
 @SuppressLint("MissingPermission")
 @Composable
-fun LocationGranted() {
+fun LocationGranted(viewModel: WeatherViewModel) {
+
+    Log.i("In LocationGranted", "Succeeded")
 
     val context = LocalContext.current
-    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
+    val fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+
+    ///// Only getting Last Location, need current location
     fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
         location?.let {
-            //getData(it.latitude, it.longitude)
+            viewModel.getDataLL(it.latitude, it.longitude)
         }
     }
+
+    /////////// Add location updates for notifications
+
 }
+
+
+
+
+
 
 // Create the Search Box and Button
 @Composable
-fun TextButton(onNavigateForecastClicked: () -> Unit) {
+fun TextButton(onNavigateForecastClicked: () -> Unit, hasLocation: MutableState<Boolean>) {
     var zipEntry by remember { mutableStateOf("") }
     val context = LocalContext.current
 
@@ -246,11 +262,24 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
         )
         Button(
             onClick = {
+
+                if (hasLocation.value) {
+                    if (zipEntry == "") {
+                        //zipcode = zipEntry
+                        onNavigateForecastClicked() }
+                    else if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
+                        Toast.makeText(context, context.getString(R.string.toastInvalid), Toast.LENGTH_SHORT).show() }
+                    else if (zipEntry.all {it.isDigit()} && zipEntry != "" && zipEntry.length == 5) {
+                        zipcode = zipEntry
+                        onNavigateForecastClicked() }
+                }
+                else {
                 if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
                     Toast.makeText(context, context.getString(R.string.toastInvalid), Toast.LENGTH_SHORT).show() }
                 else if (zipEntry.all {it.isDigit()} && zipEntry != "" && zipEntry.length == 5) {
                     zipcode = zipEntry
-                    onNavigateForecastClicked() } },
+                    onNavigateForecastClicked() }
+                } },
             colors = ButtonColors(
                 contentColor = Color.White,
                 containerColor = Color.Magenta,

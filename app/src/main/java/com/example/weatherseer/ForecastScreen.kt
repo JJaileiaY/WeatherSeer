@@ -1,5 +1,8 @@
 package com.example.weatherseer
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.location.Location
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -33,16 +37,37 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 @Composable
 fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClicked: () -> Unit) {
 
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    viewModel.getForecastData(zip)
-    val forecastResult = viewModel.forecastResult.observeAsState()
+    //viewModel.getForecastData(zip)
+    val forecastResult: State<NetworkResponse<ForecastMetaData>?>
 
     val context = LocalContext.current
+
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+    == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+    == PackageManager.PERMISSION_GRANTED) {
+
+        val fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
+
+        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
+            location?.let {
+                viewModel.getForecastDataLL(it.latitude, it.longitude)
+            }
+        }
+        forecastResult = viewModel.forecastResultLL.observeAsState()
+    }
+    else {
+        viewModel.getForecastData(zip)
+        forecastResult = viewModel.forecastResult.observeAsState()
+    }
 
     // Create Alert Dialog if zipcode not found
     var showZipNotFound by remember { mutableStateOf(false) }
