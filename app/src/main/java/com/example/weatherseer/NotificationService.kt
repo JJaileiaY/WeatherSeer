@@ -22,6 +22,8 @@ class NotificationService : Service() {
 
     // Notification pops up more than once?
     // Not showing weather info yet - How to get location updates for it here
+    // What type of service should Notifications be?
+
 
 /**
     private fun fetchWeatherData(): String {
