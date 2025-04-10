@@ -2,7 +2,6 @@ package com.example.weatherseer
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.location.Location
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -38,12 +37,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 
 @Composable
-fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClicked: () -> Unit) {
-
+fun ForecastScreen(
+    viewModel: WeatherViewModel,
+    zip: String,
+    onNavigateBackClicked: () -> Unit,
+    lat: Double,
+    lon: Double,
+    startLocationUpdates: () -> Unit)
+{
     // Fetch Weather Data
     viewModel.GetQueryInfo()
     //viewModel.getForecastData(zip)
@@ -53,15 +56,10 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
 
     if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
     == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-    == PackageManager.PERMISSION_GRANTED) {
+    == PackageManager.PERMISSION_GRANTED && zipcode == "") {
 
-        val fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-
-        fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-            location?.let {
-                viewModel.getForecastDataLL(it.latitude, it.longitude)
-            }
-        }
+        startLocationUpdates()
+        viewModel.getForecastDataLL(lat, lon)
         forecastResult = viewModel.forecastResultLL.observeAsState()
     }
     else {
@@ -89,15 +87,16 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
         )
     }
 
+    // Start of Forecast UI
     Column (
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 40.dp)
             .background(Brush.verticalGradient(listOf(Color(0xFF640baa), Color(0xFF8f149e))))
     ) {
-        // App Title and Back Button
         Box {
             AppTitle()
+            // Back Button
             Button(
                 onClick = {
                     when (forecastResult.value) {
@@ -106,6 +105,9 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
                             onNavigateBackClicked()
                         }
                         is NetworkResponse.Success -> onNavigateBackClicked()
+                        ////// Check for permission again and display location?
+                        // Has to do with how current screen is also not starting up
+                        // with location when hasLocation
                         null -> {}
                     }
                 },

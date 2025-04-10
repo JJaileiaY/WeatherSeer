@@ -1,12 +1,10 @@
 package com.example.weatherseer
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Location
 import android.os.Build
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,16 +52,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Unit) {
+fun FirstScreen(
+    viewModel: WeatherViewModel,
+    onNavigateForecastClicked: () -> Unit,
+    lat: Double,
+    lon: Double,
+    startLocationUpdates: () -> Unit)
+{
 
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    //viewModel.getData(zipcode)
     val weatherResult: State<NetworkResponse<WeatherMetaData>?>
 
     val context = LocalContext.current
@@ -71,28 +72,23 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     val hasNotification = remember {mutableStateOf(false)}
     val showRationale = remember {mutableStateOf(false)}
 
+    //////// Location not updating anymore?
+    //////// Notification affecting Location updates?
+    //////// Rationale not showing properly
+    // When hasLocation true, doesn't start up with location or go back to current screen with
+    // location, only when click button.
 
-    // how to use location service to update location etc.
-    ///// how to make it display current location vs zipcode location data,
-    // how to get rationale to show properly
-    ///// Add notification permissions and make notification persist and open app when clicked
-    /// When hasLocation true, doesn't start up with location or go back to current screen with
-    // location, only updates when click button.
 
-// might not be working
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        when {
-            permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false) -> {
-                hasLocation.value = true
-            }
-            permissions.getOrDefault(Manifest.permission.POST_NOTIFICATIONS, false) -> {
-                hasNotification.value = true
-            }
-            else -> {
-                showRationale.value = true
-            }
+    ) { permissionMaps ->
+        val granted = permissionMaps.values.reduce {acc, next -> acc && next}
+        if (granted) {
+            hasLocation.value = true
+            hasNotification.value = true
+            startLocationUpdates()
+        } else {
+            showRationale.value = true
         }
     }
 
@@ -112,9 +108,15 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
         )
     }
 
+    // Determine if location is granted or not for which type of data to display
     if (hasLocation.value) {
-        LocationGranted(viewModel)
+        startLocationUpdates()
+        viewModel.getDataLL(lat, lon)
         weatherResult = viewModel.weatherResultLL.observeAsState()
+
+        if (hasNotification.value) {
+            startNotificationService(context)
+        }
     }
     else {
         viewModel.getData(zipcode)
@@ -122,6 +124,7 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     }
 
 
+    // Start of Current Screen UI
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -129,9 +132,7 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
             .background(Brush.verticalGradient(listOf(Color(0xFF640baa), Color(0xFF8f149e))))
 
     ) {
-        // App Title, Search Bar and Button
         AppTitle()
-
         Row(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically,
@@ -150,7 +151,9 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
                     disabledContentColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent
                 ),
-                modifier = Modifier.padding(horizontal = 15.dp).height(40.dp)
+                modifier = Modifier
+                    .padding(horizontal = 15.dp)
+                    .height(40.dp)
             ) {
                 Image(
                     painterResource(R.drawable.location),
@@ -159,14 +162,14 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
             }
         }
 
-        // Evaluate Weather Data
+        // Evaluate and Display Weather Data
         when(val result = weatherResult.value) {
             is NetworkResponse.Error -> {
                 Text(text = result.message)
             }
             is NetworkResponse.Success -> {
-                CityState(result.data.name, result.data.sys.country)        // City and Country
-
+                // City and Country
+                CityState(result.data.name, result.data.sys.country)
                 // Row for Temperature and Details
                 Row(
                     modifier = Modifier
@@ -177,7 +180,7 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     // Temperature and Details
-                    Temperature(result.data.main.temp, result.data.main.feelsLike)   // Temperature
+                    Temperature(result.data.main.temp, result.data.main.feelsLike)
                     TempDetails(result.data.main.tempMin,result.data.main.tempMax, result.data.main.humidity, result.data.main.pressure)
                 }
                 // Description and Weather Icon
@@ -189,6 +192,7 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     }
 }
 
+// Check if permissions are granted
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 private fun checkPermission(context: Context, launcher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>, showLocation: () -> Unit, showRationale: () -> Unit) {
     when {
@@ -206,35 +210,25 @@ private fun checkPermission(context: Context, launcher: ManagedActivityResultLau
     }
     // Show the Rationale
     if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
-        == PackageManager.PERMISSION_DENIED || ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-        == PackageManager.PERMISSION_DENIED) {
+        == PackageManager.PERMISSION_DENIED && (context as? MainActivity)?.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION) == false) {
         showRationale()
     }
 }
 
-@SuppressLint("MissingPermission")
-@Composable
-fun LocationGranted(viewModel: WeatherViewModel) {
-
-    Log.i("In LocationGranted", "Succeeded")
-
-    val context = LocalContext.current
-
-    val fusedLocationClient: FusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context)
-
-    ///// Only getting Last Location, need current location
-    fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
-        location?.let {
-            viewModel.getDataLL(it.latitude, it.longitude)
-        }
+// To start the Notification
+fun startNotificationService(context: Context) {
+    val serviceIntent = Intent(context, NotificationService::class.java)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        // put extra with each weather data?
+        ContextCompat.startForegroundService(context, serviceIntent)
+    } else {
+        context.startService(serviceIntent)
     }
-
-    /////////// Add location updates for notifications
-
 }
 
 
 
+////// Composable Functions for the Current Screen //////
 
 
 
@@ -265,7 +259,7 @@ fun TextButton(onNavigateForecastClicked: () -> Unit, hasLocation: MutableState<
 
                 if (hasLocation.value) {
                     if (zipEntry == "") {
-                        //zipcode = zipEntry
+                        zipcode = zipEntry
                         onNavigateForecastClicked() }
                     else if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
                         Toast.makeText(context, context.getString(R.string.toastInvalid), Toast.LENGTH_SHORT).show() }
