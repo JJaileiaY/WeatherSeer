@@ -65,18 +65,15 @@ fun FirstScreen(
 
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    val weatherResult: State<NetworkResponse<WeatherMetaData>?>
+    var weatherResult: State<NetworkResponse<WeatherMetaData>?>
 
     val context = LocalContext.current
     val hasLocation = remember {mutableStateOf(false)}
     val hasNotification = remember {mutableStateOf(false)}
     val showRationale = remember {mutableStateOf(false)}
 
-    //////// Location not updating anymore?
-    //////// Notification affecting Location updates?
+    // LocationCallBack sometimes works and sometimes doesn't
     //////// Rationale not showing properly
-    // When hasLocation true, doesn't start up with location or go back to current screen with
-    // location, only when click button.
 
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
@@ -111,18 +108,30 @@ fun FirstScreen(
     // Determine if location is granted or not for which type of data to display
     if (hasLocation.value) {
         startLocationUpdates()
-        viewModel.getDataLL(lat, lon)
-        weatherResult = viewModel.weatherResultLL.observeAsState()
-
-        if (hasNotification.value) {
-            startNotificationService(context)
-        }
-    }
-    else {
-        viewModel.getData(zipcode)
+        viewModel.getData(lat, lon)
         weatherResult = viewModel.weatherResult.observeAsState()
     }
+    else {
 
+        // Check Permission In case they are granted
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            == PackageManager.PERMISSION_GRANTED && zipcode == "") {
+
+            hasLocation.value = true
+            startLocationUpdates()
+            viewModel.getData(lat, lon)
+            weatherResult = viewModel.weatherResult.observeAsState()
+        }
+        else {
+            viewModel.getData(zipcode)
+            weatherResult = viewModel.weatherResult.observeAsState()
+        }
+    }
+
+    if (hasNotification.value) {
+        startNotificationService(context)
+    }
 
     // Start of Current Screen UI
     Column(
@@ -166,6 +175,20 @@ fun FirstScreen(
         when(val result = weatherResult.value) {
             is NetworkResponse.Error -> {
                 Text(text = result.message)
+
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED) {
+
+                    startLocationUpdates()
+                    viewModel.getData(lat, lon)
+                    weatherResult = viewModel.weatherResult.observeAsState()
+                }
+                else {
+                    viewModel.getData(zipcode)
+                    weatherResult = viewModel.weatherResult.observeAsState()
+                }
+
             }
             is NetworkResponse.Success -> {
                 // City and Country

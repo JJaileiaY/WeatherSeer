@@ -57,6 +57,24 @@ class WeatherViewModel: ViewModel() {
         }
     }
 
+    fun getData(lat: Double, lon: Double) {
+
+        viewModelScope.launch {
+            try {
+                val response = weatherService.getWeatherLL(lat, lon, appid, units)
+                if(response.isSuccessful) {
+                    response.body()?.let {
+                        _weatherResult.value = NetworkResponse.Success(it)
+                    }
+                } else {
+                    _weatherResult.value = NetworkResponse.Error(errMessage)
+                }
+            } catch (e: Exception) {
+                _weatherResult.value = NetworkResponse.Error(errMessage)
+            }
+        }
+    }
+
     // Get the forecast data, determine if success or not.
     fun getForecastData(zip: String) {
         viewModelScope.launch {
@@ -76,10 +94,11 @@ class WeatherViewModel: ViewModel() {
     }
 
 
-
+/**
     // Get the weather data using Lat and Lon, determine if success or not.
     fun getDataLL(lat: Double, lon: Double) {
 
+        // set to weatherresult instead which then only need to use v.weatherResult.observe...
         viewModelScope.launch {
             try {
                 val response = weatherService.getWeatherLL(lat, lon, appid, units)
@@ -95,7 +114,7 @@ class WeatherViewModel: ViewModel() {
             }
         }
     }
-
+**/
     // Get the forecast data using Lat and Lon, determine if success or not.
     fun getForecastDataLL(lat: Double, lon: Double) {
         viewModelScope.launch {

@@ -72,6 +72,19 @@ class NotificationService : Service() {
         }
     }
 
+    private fun checkExistingNotification(notificationId: Int): Boolean {
+        val notificationManager: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val activeNotifications = notificationManager.activeNotifications
+
+        activeNotifications?.forEach { notification ->
+            if (notification.id == notificationId) {
+                return true
+            }
+        }
+        return false
+    }
+
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
@@ -87,7 +100,8 @@ class NotificationService : Service() {
             == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             == PackageManager.PERMISSION_GRANTED) {
             // get each extra here? but how to use for other functions..
-            startForeground(notificationId, showWeatherNotification())
+            // check if notification already showing so it doesn't pop up twice?
+                startForeground(notificationId, showWeatherNotification())
         }
         return START_STICKY
     }

@@ -49,7 +49,6 @@ fun ForecastScreen(
 {
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    //viewModel.getForecastData(zip)
     val forecastResult: State<NetworkResponse<ForecastMetaData>?>
 
     val context = LocalContext.current
@@ -104,10 +103,9 @@ fun ForecastScreen(
                             zipcode = context.getString(R.string.defaultZip)
                             onNavigateBackClicked()
                         }
-                        is NetworkResponse.Success -> onNavigateBackClicked()
-                        ////// Check for permission again and display location?
-                        // Has to do with how current screen is also not starting up
-                        // with location when hasLocation
+                        is NetworkResponse.Success -> {
+                            onNavigateBackClicked()
+                        }
                         null -> {}
                     }
                 },
