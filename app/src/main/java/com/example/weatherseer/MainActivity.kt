@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
 import android.os.Looper
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -50,7 +49,6 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @SuppressLint("MissingPermission")
     private fun startLocationUpdates() {
-        Log.d("StartLoUp", "In StartLoUp")   //// Going in and working
 
         locationCallback.let {
             val locationRequest = LocationRequest.Builder(
@@ -93,11 +91,7 @@ class MainActivity : ComponentActivity() {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-
         setContent {
-
-            //var latitude by remember { mutableDoubleStateOf(44.9522) }
-            //var longitude by remember { mutableDoubleStateOf(-93.0955) }
 
             var latitude by remember { mutableDoubleStateOf(0.0) }
             var longitude by remember { mutableDoubleStateOf(0.0) }
@@ -106,8 +100,6 @@ class MainActivity : ComponentActivity() {
                 override fun onLocationResult(p0: LocationResult) {
                     super.onLocationResult(p0)
                     for (location in p0.locations) {
-                        Log.d("LoCall", "Changing Locations")   //// Not going in
-
                         latitude = location.latitude
                         longitude = location.longitude
                     }

@@ -1,6 +1,7 @@
 package com.example.weatherseer
 
 import android.Manifest
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -62,7 +64,6 @@ fun FirstScreen(
     lon: Double,
     startLocationUpdates: () -> Unit)
 {
-
     // Fetch Weather Data
     viewModel.GetQueryInfo()
     var weatherResult: State<NetworkResponse<WeatherMetaData>?>
@@ -72,36 +73,45 @@ fun FirstScreen(
     val hasNotification = remember {mutableStateOf(false)}
     val showRationale = remember {mutableStateOf(false)}
 
-    // LocationCallBack sometimes works and sometimes doesn't
-    //////// Rationale not showing properly
-
+    // LocationCallBack sometimes works and sometimes doesn't especially when switching the permissions back and forth.
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissionMaps ->
         val granted = permissionMaps.values.reduce {acc, next -> acc && next}
         if (granted) {
+            startLocationUpdates()
             hasLocation.value = true
             hasNotification.value = true
-            startLocationUpdates()
         } else {
             showRationale.value = true
         }
     }
 
+    // Rationale Dialog
     if (showRationale.value) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text(stringResource(R.string.rationaleTitle)) },
             text = { Text(stringResource(R.string.rationaleMessage)) },
-            confirmButton = {
+            dismissButton = {
                 Button(onClick = {
                     showRationale.value = false
                 }) {
-                    Text(stringResource(R.string.alertOk))
+                    Text(stringResource(R.string.alertCancel))
                 }
             },
-            dismissButton = null
+            confirmButton = {
+                Button(onClick = {
+                    showRationale.value = false
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.POST_NOTIFICATIONS)
+                    )
+                }) {
+                    Text(stringResource(R.string.alertOk))
+                }
+            }
         )
     }
 
@@ -110,9 +120,13 @@ fun FirstScreen(
         startLocationUpdates()
         viewModel.getData(lat, lon)
         weatherResult = viewModel.weatherResult.observeAsState()
+        hasNotification.value = true
+
+        if (hasNotification.value) {
+            showNotification(context, weatherResult)
+        }
     }
     else {
-
         // Check Permission In case they are granted
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
             == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
@@ -129,17 +143,12 @@ fun FirstScreen(
         }
     }
 
-    if (hasNotification.value) {
-        startNotificationService(context)
-    }
-
     // Start of Current Screen UI
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 40.dp)
             .background(Brush.verticalGradient(listOf(Color(0xFF640baa), Color(0xFF8f149e))))
-
     ) {
         AppTitle()
         Row(
@@ -176,6 +185,7 @@ fun FirstScreen(
             is NetworkResponse.Error -> {
                 Text(text = result.message)
 
+                // Check if there is data
                 if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
                     == PackageManager.PERMISSION_GRANTED) {
@@ -188,7 +198,6 @@ fun FirstScreen(
                     viewModel.getData(zipcode)
                     weatherResult = viewModel.weatherResult.observeAsState()
                 }
-
             }
             is NetworkResponse.Success -> {
                 // City and Country
@@ -224,6 +233,9 @@ private fun checkPermission(context: Context, launcher: ManagedActivityResultLau
                 == PackageManager.PERMISSION_GRANTED -> {
                     showLocation()
         }
+        ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, Manifest.permission.ACCESS_COARSE_LOCATION) -> {
+            showRationale()
+        }
         else -> {
             launcher.launch(
                 arrayOf(
@@ -231,18 +243,43 @@ private fun checkPermission(context: Context, launcher: ManagedActivityResultLau
             )
         }
     }
-    // Show the Rationale
-    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
-        == PackageManager.PERMISSION_DENIED && (context as? MainActivity)?.shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION) == false) {
-        showRationale()
+}
+
+// Call the notification
+fun showNotification(context: Context, weatherResult: State<NetworkResponse<WeatherMetaData>?>) {
+
+    when (val notifResult = weatherResult.value) {
+        is NetworkResponse.Success -> {
+            startNotificationService(context,
+                notifResult.data.name,
+                notifResult.data.sys.country,
+                notifResult.data.weather[0].description,
+                notifResult.data.weather[0].icon,
+                notifResult.data.main.temp.toInt().toString()
+            )
+        }
+        is NetworkResponse.Error -> {}
+        null -> {}
     }
 }
 
 // To start the Notification
-fun startNotificationService(context: Context) {
+fun startNotificationService(
+    context: Context,
+    city: String,
+    country: String,
+    description: String,
+    icon: String,
+    temp: String
+) {
     val serviceIntent = Intent(context, NotificationService::class.java)
+    serviceIntent.putExtra("cityName", city)
+    serviceIntent.putExtra("countryName", country)
+    serviceIntent.putExtra("desc", description)
+    serviceIntent.putExtra("icon", icon)
+    serviceIntent.putExtra("temp", temp)
+
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        // put extra with each weather data?
         ContextCompat.startForegroundService(context, serviceIntent)
     } else {
         context.startService(serviceIntent)
@@ -252,7 +289,6 @@ fun startNotificationService(context: Context) {
 
 
 ////// Composable Functions for the Current Screen //////
-
 
 
 // Create the Search Box and Button

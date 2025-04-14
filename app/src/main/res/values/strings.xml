@@ -6,7 +6,7 @@
     <string name="forecastScreen">forecast_screen</string>
 
     <string name="defaultZip">55155</string>
-    <string name="search">Search</string>
+    <string name="search">16-Day</string>
     <string name="back">Back</string>
     <string name="forecastTitle">16-Day Weather Forecast</string>
 
@@ -15,9 +15,10 @@
     <string name="toastInvalid">Zipcode Not Found</string>
     <string name="alertTitle">Zipcode Not Found</string>
     <string name="alertMessage">Sorry, the zipcode you entered was not found.</string>
-    <string name="alertOk">OK</string>
-    <string name="rationaleTitle">Please allow Permission for Location and Notification</string>
-    <string name="rationaleMessage">Location and Notification permissions are needed in order to find the weather for your current location.</string>
+    <string name="alertOk">Ok</string>
+    <string name="alertCancel">Cancel</string>
+    <string name="rationaleTitle">Please Allow Permission for Location and Notification</string>
+    <string name="rationaleMessage">Location and Notification permissions are needed in order to find the weather for your current location. In order to use this service, please enable them here or in your settings.</string>
 
     <string name="comma">," "</string>
     <string name="degree">°</string>
@@ -40,4 +41,10 @@
     <string name="storm">Storm</string>
     <string name="snow">Snow</string>
     <string name="mist">Mist</string>
+
+    <string name="cityName">cityName</string>
+    <string name="countryName">countryName</string>
+    <string name="desc">desc</string>
+    <string name="icon">icon</string>
+    <string name="temp">temp</string>
 </resources>

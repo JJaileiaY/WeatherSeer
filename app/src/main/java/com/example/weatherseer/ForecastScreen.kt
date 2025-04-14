@@ -58,8 +58,8 @@ fun ForecastScreen(
     == PackageManager.PERMISSION_GRANTED && zipcode == "") {
 
         startLocationUpdates()
-        viewModel.getForecastDataLL(lat, lon)
-        forecastResult = viewModel.forecastResultLL.observeAsState()
+        viewModel.getForecastData(lat, lon)
+        forecastResult = viewModel.forecastResult.observeAsState()
     }
     else {
         viewModel.getForecastData(zip)
