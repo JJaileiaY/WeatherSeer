@@ -10,8 +10,9 @@ import kotlinx.coroutines.launch
 
 class WeatherViewModel: ViewModel() {
 
-    // LiveData variables
     private val weatherService = RetrofitInstance.weatherService
+
+    // LiveData variables
     private val _weatherResult = MutableLiveData<NetworkResponse<WeatherMetaData>>()
     val weatherResult: LiveData<NetworkResponse<WeatherMetaData>> = _weatherResult
     private val _forecastResult = MutableLiveData<NetworkResponse<ForecastMetaData>>()

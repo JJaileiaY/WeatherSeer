@@ -4,10 +4,14 @@
     <string name="units">imperial</string>
     <string name="currentScreen">first_screen</string>
     <string name="forecastScreen">forecast_screen</string>
+    <string name="channelId">weatherChannel</string>
+    <string name="channelName">Weather Notifications</string>
+    <string name="channelDesc">Current Weather</string>
 
     <string name="defaultZip">55155</string>
     <string name="search">16-Day</string>
     <string name="back">Back</string>
+    <string name="locationIcon">Location</string>
     <string name="forecastTitle">16-Day Weather Forecast</string>
 
     <string name="errMessage">Couldn\'t find what you were looking for.</string>

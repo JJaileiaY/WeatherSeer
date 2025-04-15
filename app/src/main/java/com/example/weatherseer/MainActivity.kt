@@ -93,6 +93,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
+            // LocationCallBack sometimes doesn't work anymore when switching the permissions back and forth.
+            // Try Resetting the emulator and wait for 1 min.
+
             var latitude by remember { mutableDoubleStateOf(0.0) }
             var longitude by remember { mutableDoubleStateOf(0.0) }
 

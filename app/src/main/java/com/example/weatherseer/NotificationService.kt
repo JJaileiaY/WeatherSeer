@@ -1,4 +1,5 @@
 package com.example.weatherseer
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Notification
@@ -18,7 +19,7 @@ import androidx.core.content.ContextCompat
 class NotificationService : Service() {
 
     private val notificationId = 1
-    private val channelId = "weather_channel"
+    private val channelId = "weatherChannel"
 
     @SuppressLint("MissingPermission")
     private fun showWeatherNotification(
@@ -62,8 +63,8 @@ class NotificationService : Service() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "Weather Notifications"
-            val descriptionText = "Current Weather"
+            val name = this.getString(R.string.channelName)
+            val descriptionText = this.getString(R.string.channelDesc)
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(channelId, name, importance).apply {
                 description = descriptionText
@@ -87,11 +88,11 @@ class NotificationService : Service() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
             == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
             == PackageManager.PERMISSION_GRANTED) {
-            val city = intent?.getStringExtra("cityName")
-            val country = intent?.getStringExtra("countryName")
-            val desc = intent?.getStringExtra("desc")
-            val icon = intent?.getStringExtra("icon")
-            val temp = intent?.getStringExtra("temp")
+            val city = intent?.getStringExtra(this.getString(R.string.cityName))
+            val country = intent?.getStringExtra(this.getString(R.string.countryName))
+            val desc = intent?.getStringExtra(this.getString(R.string.desc))
+            val icon = intent?.getStringExtra(this.getString(R.string.icon))
+            val temp = intent?.getStringExtra(this.getString(R.string.temp))
 
             startForeground(notificationId, showWeatherNotification(city, country, desc, icon, temp))
         }

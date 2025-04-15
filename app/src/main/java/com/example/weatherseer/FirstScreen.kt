@@ -73,8 +73,6 @@ fun FirstScreen(
     val hasNotification = remember {mutableStateOf(false)}
     val showRationale = remember {mutableStateOf(false)}
 
-    // LocationCallBack sometimes works and sometimes doesn't especially when switching the permissions back and forth.
-
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissionMaps ->
@@ -175,7 +173,7 @@ fun FirstScreen(
             ) {
                 Image(
                     painterResource(R.drawable.location),
-                    contentDescription = "Location"
+                    contentDescription = stringResource(R.string.locationIcon)
                 )
             }
         }
@@ -273,11 +271,11 @@ fun startNotificationService(
     temp: String
 ) {
     val serviceIntent = Intent(context, NotificationService::class.java)
-    serviceIntent.putExtra("cityName", city)
-    serviceIntent.putExtra("countryName", country)
-    serviceIntent.putExtra("desc", description)
-    serviceIntent.putExtra("icon", icon)
-    serviceIntent.putExtra("temp", temp)
+    serviceIntent.putExtra(context.getString(R.string.cityName), city)
+    serviceIntent.putExtra(context.getString(R.string.countryName), country)
+    serviceIntent.putExtra(context.getString(R.string.desc), description)
+    serviceIntent.putExtra(context.getString(R.string.icon), icon)
+    serviceIntent.putExtra(context.getString(R.string.temp), temp)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         ContextCompat.startForegroundService(context, serviceIntent)
@@ -285,7 +283,6 @@ fun startNotificationService(
         context.startService(serviceIntent)
     }
 }
-
 
 
 ////// Composable Functions for the Current Screen //////
