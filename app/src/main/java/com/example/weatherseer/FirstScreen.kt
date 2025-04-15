@@ -1,6 +1,16 @@
 package com.example.weatherseer
 
+import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.ManagedActivityResultLauncher
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -16,12 +26,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -39,34 +52,154 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Unit) {
-
+fun FirstScreen(
+    viewModel: WeatherViewModel,
+    onNavigateForecastClicked: () -> Unit,
+    lat: Double,
+    lon: Double,
+    startLocationUpdates: () -> Unit)
+{
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    viewModel.getData(zipcode)
-    val weatherResult = viewModel.weatherResult.observeAsState()
+    var weatherResult: State<NetworkResponse<WeatherMetaData>?>
 
+    val context = LocalContext.current
+    val hasLocation = remember {mutableStateOf(false)}
+    val hasNotification = remember {mutableStateOf(false)}
+    val showRationale = remember {mutableStateOf(false)}
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissionMaps ->
+        val granted = permissionMaps.values.reduce {acc, next -> acc && next}
+        if (granted) {
+            startLocationUpdates()
+            hasLocation.value = true
+            hasNotification.value = true
+        } else {
+            showRationale.value = true
+        }
+    }
+
+    // Rationale Dialog
+    if (showRationale.value) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.rationaleTitle)) },
+            text = { Text(stringResource(R.string.rationaleMessage)) },
+            dismissButton = {
+                Button(onClick = {
+                    showRationale.value = false
+                }) {
+                    Text(stringResource(R.string.alertCancel))
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showRationale.value = false
+                    locationPermissionLauncher.launch(
+                        arrayOf(
+                            Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.POST_NOTIFICATIONS)
+                    )
+                }) {
+                    Text(stringResource(R.string.alertOk))
+                }
+            }
+        )
+    }
+
+    // Determine if location is granted or not for which type of data to display
+    if (hasLocation.value) {
+        startLocationUpdates()
+        viewModel.getData(lat, lon)
+        weatherResult = viewModel.weatherResult.observeAsState()
+        hasNotification.value = true
+
+        if (hasNotification.value) {
+            showNotification(context, weatherResult)
+        }
+    }
+    else {
+        // Check Permission In case they are granted
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+            == PackageManager.PERMISSION_GRANTED && zipcode == "") {
+
+            hasLocation.value = true
+            startLocationUpdates()
+            viewModel.getData(lat, lon)
+            weatherResult = viewModel.weatherResult.observeAsState()
+        }
+        else {
+            viewModel.getData(zipcode)
+            weatherResult = viewModel.weatherResult.observeAsState()
+        }
+    }
+
+    // Start of Current Screen UI
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 40.dp)
             .background(Brush.verticalGradient(listOf(Color(0xFF640baa), Color(0xFF8f149e))))
-
     ) {
-        // App Title, Search Bar and Button
         AppTitle()
-        TextButton(onNavigateForecastClicked)
+        Row(
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .height(80.dp)
+                .padding(top = 10.dp)
+        ) {
+            TextButton(onNavigateForecastClicked, hasLocation)
+            Button(
+                onClick = {
+                    checkPermission(context, locationPermissionLauncher, {hasLocation.value = true}) {showRationale.value = true}
+                },
+                colors = ButtonColors(
+                    contentColor = Color.White,
+                    containerColor = Color.Magenta,
+                    disabledContentColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                ),
+                modifier = Modifier
+                    .padding(horizontal = 15.dp)
+                    .height(40.dp)
+            ) {
+                Image(
+                    painterResource(R.drawable.location),
+                    contentDescription = stringResource(R.string.locationIcon)
+                )
+            }
+        }
 
-        // Evaluate Weather Data
+        // Evaluate and Display Weather Data
         when(val result = weatherResult.value) {
             is NetworkResponse.Error -> {
                 Text(text = result.message)
+
+                // Check if there is data
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED) {
+
+                    startLocationUpdates()
+                    viewModel.getData(lat, lon)
+                    weatherResult = viewModel.weatherResult.observeAsState()
+                }
+                else {
+                    viewModel.getData(zipcode)
+                    weatherResult = viewModel.weatherResult.observeAsState()
+                }
             }
             is NetworkResponse.Success -> {
-                CityState(result.data.name, result.data.sys.country)        // City and Country
-
+                // City and Country
+                CityState(result.data.name, result.data.sys.country)
                 // Row for Temperature and Details
                 Row(
                     modifier = Modifier
@@ -77,7 +210,7 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     // Temperature and Details
-                    Temperature(result.data.main.temp, result.data.main.feelsLike)   // Temperature
+                    Temperature(result.data.main.temp, result.data.main.feelsLike)
                     TempDetails(result.data.main.tempMin,result.data.main.tempMax, result.data.main.humidity, result.data.main.pressure)
                 }
                 // Description and Weather Icon
@@ -89,20 +222,80 @@ fun FirstScreen(viewModel: WeatherViewModel, onNavigateForecastClicked: () -> Un
     }
 }
 
+// Check if permissions are granted
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+private fun checkPermission(context: Context, launcher: ManagedActivityResultLauncher<Array<String>, Map<String, @JvmSuppressWildcards Boolean>>, showLocation: () -> Unit, showRationale: () -> Unit) {
+    when {
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                == PackageManager.PERMISSION_GRANTED -> {
+                    showLocation()
+        }
+        ActivityCompat.shouldShowRequestPermissionRationale(context as Activity, Manifest.permission.ACCESS_COARSE_LOCATION) -> {
+            showRationale()
+        }
+        else -> {
+            launcher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.POST_NOTIFICATIONS)
+            )
+        }
+    }
+}
+
+// Call the notification
+fun showNotification(context: Context, weatherResult: State<NetworkResponse<WeatherMetaData>?>) {
+
+    when (val notifResult = weatherResult.value) {
+        is NetworkResponse.Success -> {
+            startNotificationService(context,
+                notifResult.data.name,
+                notifResult.data.sys.country,
+                notifResult.data.weather[0].description,
+                notifResult.data.weather[0].icon,
+                notifResult.data.main.temp.toInt().toString()
+            )
+        }
+        is NetworkResponse.Error -> {}
+        null -> {}
+    }
+}
+
+// To start the Notification
+fun startNotificationService(
+    context: Context,
+    city: String,
+    country: String,
+    description: String,
+    icon: String,
+    temp: String
+) {
+    val serviceIntent = Intent(context, NotificationService::class.java)
+    serviceIntent.putExtra(context.getString(R.string.cityName), city)
+    serviceIntent.putExtra(context.getString(R.string.countryName), country)
+    serviceIntent.putExtra(context.getString(R.string.desc), description)
+    serviceIntent.putExtra(context.getString(R.string.icon), icon)
+    serviceIntent.putExtra(context.getString(R.string.temp), temp)
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        ContextCompat.startForegroundService(context, serviceIntent)
+    } else {
+        context.startService(serviceIntent)
+    }
+}
+
+
+////// Composable Functions for the Current Screen //////
+
+
 // Create the Search Box and Button
 @Composable
-fun TextButton(onNavigateForecastClicked: () -> Unit) {
+fun TextButton(onNavigateForecastClicked: () -> Unit, hasLocation: MutableState<Boolean>) {
     var zipEntry by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    Row(
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .height(50.dp)
-    ) {
         TextField(
             zipEntry,
             onValueChange = { newZip ->
@@ -112,18 +305,31 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
                 .height(50.dp)
-                .width(300.dp)
-                .padding(horizontal = 25.dp),
+                .width(210.dp)
+                .padding(horizontal = 20.dp),
             colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White),
             shape = RoundedCornerShape(12.dp)
         )
         Button(
             onClick = {
+
+                if (hasLocation.value) {
+                    if (zipEntry == "") {
+                        zipcode = zipEntry
+                        onNavigateForecastClicked() }
+                    else if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
+                        Toast.makeText(context, context.getString(R.string.toastInvalid), Toast.LENGTH_SHORT).show() }
+                    else if (zipEntry.all {it.isDigit()} && zipEntry != "" && zipEntry.length == 5) {
+                        zipcode = zipEntry
+                        onNavigateForecastClicked() }
+                }
+                else {
                 if (!zipEntry.all {it.isDigit()} || zipEntry == "" || zipEntry.length != 5) {
                     Toast.makeText(context, context.getString(R.string.toastInvalid), Toast.LENGTH_SHORT).show() }
                 else if (zipEntry.all {it.isDigit()} && zipEntry != "" && zipEntry.length == 5) {
                     zipcode = zipEntry
-                    onNavigateForecastClicked() } },
+                    onNavigateForecastClicked() }
+                } },
             colors = ButtonColors(
                 contentColor = Color.White,
                 containerColor = Color.Magenta,
@@ -133,7 +339,7 @@ fun TextButton(onNavigateForecastClicked: () -> Unit) {
         ) {
             Text(stringResource(R.string.search))
         }
-    }
+
 }
 
 // Create the App Title
@@ -247,7 +453,9 @@ fun WeatherDescription(desc: String) {
         Text(desc.capitalizeFirstLetter(),
             fontSize = 24.sp,
             color = Color.White,
-            modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 50.dp)
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = 50.dp)
         )
     }
 }
@@ -259,7 +467,9 @@ fun WeatherI(icon: String) {
             .fillMaxWidth()
             .height(400.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize().align(Alignment.Bottom))
+        Column(modifier = Modifier
+            .fillMaxSize()
+            .align(Alignment.Bottom))
         {
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -268,7 +478,9 @@ fun WeatherI(icon: String) {
                 Image(
                     painterResource(R.drawable.crystalb),
                     contentDescription = stringResource(R.string.crystalBall),
-                    modifier = Modifier.fillMaxSize().padding(top = 50.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 50.dp)
                 )
                 Image(
                     when (icon) {

@@ -1,5 +1,7 @@
 package com.example.weatherseer
 
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -33,16 +36,35 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 
 @Composable
-fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClicked: () -> Unit) {
-
+fun ForecastScreen(
+    viewModel: WeatherViewModel,
+    zip: String,
+    onNavigateBackClicked: () -> Unit,
+    lat: Double,
+    lon: Double,
+    startLocationUpdates: () -> Unit)
+{
     // Fetch Weather Data
     viewModel.GetQueryInfo()
-    viewModel.getForecastData(zip)
-    val forecastResult = viewModel.forecastResult.observeAsState()
+    val forecastResult: State<NetworkResponse<ForecastMetaData>?>
 
     val context = LocalContext.current
+
+    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+    == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+    == PackageManager.PERMISSION_GRANTED && zipcode == "") {
+
+        startLocationUpdates()
+        viewModel.getForecastData(lat, lon)
+        forecastResult = viewModel.forecastResult.observeAsState()
+    }
+    else {
+        viewModel.getForecastData(zip)
+        forecastResult = viewModel.forecastResult.observeAsState()
+    }
 
     // Create Alert Dialog if zipcode not found
     var showZipNotFound by remember { mutableStateOf(false) }
@@ -64,15 +86,16 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
         )
     }
 
+    // Start of Forecast UI
     Column (
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 40.dp)
             .background(Brush.verticalGradient(listOf(Color(0xFF640baa), Color(0xFF8f149e))))
     ) {
-        // App Title and Back Button
         Box {
             AppTitle()
+            // Back Button
             Button(
                 onClick = {
                     when (forecastResult.value) {
@@ -80,7 +103,9 @@ fun ForecastScreen(viewModel: WeatherViewModel, zip: String, onNavigateBackClick
                             zipcode = context.getString(R.string.defaultZip)
                             onNavigateBackClicked()
                         }
-                        is NetworkResponse.Success -> onNavigateBackClicked()
+                        is NetworkResponse.Success -> {
+                            onNavigateBackClicked()
+                        }
                         null -> {}
                     }
                 },
