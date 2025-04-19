@@ -82,8 +82,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // ViewModels for current data and forecast data
-        val weatherViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
-        val forecastViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
+        //val weatherViewModel = ViewModelProvider(this, RetrofitInstance.weatherService)[WeatherViewModel::class.java]
+        //val forecastViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
+        val weatherViewModel = WeatherViewModel(RetrofitInstance.weatherService)
+        val forecastViewModel = WeatherViewModel(RetrofitInstance.weatherService)
+
 
         val context = applicationContext
         val currentScreen = context.getString(R.string.currentScreen)

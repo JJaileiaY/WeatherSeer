@@ -8,9 +8,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
-class WeatherViewModel: ViewModel() {
+class WeatherViewModel(
+    private val weatherService: WeatherService): ViewModel() {
 
-    private val weatherService = RetrofitInstance.weatherService
+    //private val weatherService = RetrofitInstance.weatherService
 
     // LiveData variables
     private val _weatherResult = MutableLiveData<NetworkResponse<WeatherMetaData>>()
