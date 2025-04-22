@@ -20,7 +20,7 @@ class MockService: WeatherService {
         units: String
     ): Response<ForecastMetaData> {
         return mockForecastResponse?:
-            throw IllegalStateException("mockForecastResponse null")
+        throw IllegalStateException("mockForecastResponse null")
     }
 
     override suspend fun getWeatherLL(
@@ -29,7 +29,8 @@ class MockService: WeatherService {
         appid: String,
         units: String
     ): Response<WeatherMetaData> {
-        TODO("Not yet implemented")
+        return mockWeatherResponse?:
+        throw IllegalStateException("mockWeatherResponse null")
     }
 
     override suspend fun getForecastLL(
@@ -39,6 +40,7 @@ class MockService: WeatherService {
         days: Int,
         units: String
     ): Response<ForecastMetaData> {
-        TODO("Not yet implemented")
+        return mockForecastResponse?:
+        throw IllegalStateException("mockForecastResponse null")
     }
 }
