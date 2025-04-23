@@ -2,7 +2,7 @@ package com.example.weatherseer
 
 import retrofit2.Response
 
-class MockService: WeatherService {
+class MockServiceUI: WeatherService {
 
     var mockWeatherResponse: Response<WeatherMetaData>? = null
     var mockForecastResponse: Response<ForecastMetaData>? = null
@@ -42,4 +42,5 @@ class MockService: WeatherService {
         return mockForecastResponse?:
         throw IllegalStateException("mockForecastResponse null")
     }
+
 }

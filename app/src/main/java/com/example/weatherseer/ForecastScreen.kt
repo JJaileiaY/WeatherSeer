@@ -66,26 +66,6 @@ fun ForecastScreen(
         forecastResult = viewModel.forecastResult.observeAsState()
     }
 
-    // Create Alert Dialog if zipcode not found
-    var showZipNotFound by remember { mutableStateOf(false) }
-    if (showZipNotFound) {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text(stringResource(R.string.alertTitle)) },
-            text = { Text(stringResource(R.string.alertMessage)) },
-            confirmButton = {
-                Button(onClick = {
-                    zipcode = context.getString(R.string.defaultZip)
-                    showZipNotFound = false
-                    onNavigateBackClicked()
-                }) {
-                    Text(stringResource(R.string.alertOk))
-                }
-            },
-            dismissButton = null
-        )
-    }
-
     // Start of Forecast UI
     Column (
         modifier = Modifier
@@ -139,7 +119,21 @@ fun ForecastScreen(
         // Evaluate Forecast Data
         when(val result = forecastResult.value) {
             is NetworkResponse.Error -> {
-                showZipNotFound = true
+
+                // Show Alert if zipcode was invalid/API fails
+                AlertDialog(
+                    onDismissRequest = {},
+                    title = { Text(stringResource(R.string.alertTitle)) },
+                    text = { Text(stringResource(R.string.alertMessage)) },
+                    confirmButton = {
+                        Button(onClick = {
+                            zipcode = context.getString(R.string.defaultZip)
+                            onNavigateBackClicked()
+                        }) {
+                            Text(stringResource(R.string.alertOk))
+                        } },
+                    dismissButton = null
+                )
             }
             is NetworkResponse.Success -> {
                 ForecastColumn(result.data.city.name, result.data.city.country, result.data.list)

@@ -1,11 +1,13 @@
 package com.example.weatherseer
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Test
 import org.junit.Assert.*
@@ -37,16 +39,18 @@ class WeatherViewModelTest {
     @Before
     fun setup() {
         dispatcher = UnconfinedTestDispatcher()
+        Dispatchers.setMain(dispatcher)
         //service = MockService()
         //viewModel = WeatherViewModel(service)
         }
 
+    ///////// got rid of dispatcher in runTest() //// all working
 
     // Unit Tests for getData(zip)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getData try is successful`() = runTest(dispatcher) {
+    fun `getData try is successful`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)

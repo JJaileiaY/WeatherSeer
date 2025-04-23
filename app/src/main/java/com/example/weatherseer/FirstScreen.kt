@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -351,7 +352,8 @@ fun AppTitle() {
             modifier = Modifier
                 .background(Color(0xFFa121ca))
                 .fillMaxWidth()
-                .padding(18.dp),
+                .padding(18.dp)
+                .testTag("AppTitle"),
             fontSize = 24.sp,
             color = Color.White,
             textAlign = TextAlign.Center
