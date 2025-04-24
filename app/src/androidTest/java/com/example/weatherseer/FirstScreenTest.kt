@@ -1,106 +1,49 @@
 package com.example.weatherseer
 
+import android.content.Context
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import retrofit2.Response
 
 class FirstScreenTest {
 
-    // Passing separately, but some data is empty
     // Recheck all files for comments and clean them up before turning in
+    // Test notifications
 
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
-    @Test
-    fun appTitleIsDisplayed() {
-        val mockWeatherService = MockServiceUI()
-        val viewModel = WeatherViewModel(mockWeatherService)
+    private lateinit var context: Context
+    private lateinit var mockService: MockServiceUI
+    private lateinit var viewModel: WeatherViewModel
+    private lateinit var mockWeatherData: WeatherMetaData
+    private lateinit var sampleZip: String
+    private lateinit var uiDevice: UiDevice
 
-        // Initialize LiveData with a default value
-        viewModel.weatherResult as MutableLiveData
-        (viewModel.weatherResult as MutableLiveData<NetworkResponse<WeatherMetaData>>).postValue(null)
-
-        composeTestRule.setContent {
-            FirstScreen(
-                viewModel = viewModel,
-                onNavigateForecastClicked = {},
-                lat = 0.0,
-                lon = 0.0,
-                startLocationUpdates = {}
-            )
-        }
-
-        composeTestRule.onNodeWithText("WeatherSeer").assertIsDisplayed()
-    }
-
-    @Test
-    fun searchButtonClickedWithZipNavigatesToForecastScreen() {
-        val mockWeatherService = MockServiceUI()
-        val viewModel = WeatherViewModel(mockWeatherService)
-
-        // Initialize LiveData with a default value
-        viewModel.weatherResult as MutableLiveData
-        (viewModel.weatherResult as MutableLiveData<NetworkResponse<WeatherMetaData>>).postValue(null)
-        var navigated = false
-
-        composeTestRule.setContent {
-            FirstScreen(
-                viewModel = viewModel,
-                onNavigateForecastClicked = { navigated = true },
-                lat = 0.0,
-                lon = 0.0,
-                startLocationUpdates = {}
-            )
-        }
-
-        composeTestRule.onNodeWithText("").performTextInput("12345")
-        composeTestRule.onNodeWithText("16-Day").performClick()
-        Assert.assertEquals(true, navigated)
-    }
-
-    @Test
-    fun searchButtonClickedWithInvalidZipShowsToast() {
-        val mockWeatherService = MockServiceUI()
-        val viewModel = WeatherViewModel(mockWeatherService)
-
-        // Initialize LiveData with a default value
-        viewModel.weatherResult as MutableLiveData
-        (viewModel.weatherResult as MutableLiveData<NetworkResponse<WeatherMetaData>>).postValue(null)
-
-        composeTestRule.setContent {
-            FirstScreen(
-                viewModel = viewModel,
-                onNavigateForecastClicked = {},
-                lat = 0.0,
-                lon = 0.0,
-                startLocationUpdates = {}
-            )
-        }
-
-        composeTestRule.onNodeWithText("").performTextInput("1234")
-        composeTestRule.onNodeWithText("16-Day").performClick()
-    }
-
-
-    ///// Test if the permissions show up and if rationale shows up?
-    ////  Test if hasLocation then when click button reload weather to show current?
-    /// Test Notification shows up when hasLocation and hasNotifications?
-
-
-    @Test
-    fun weatherDataSucceededAndDisplayed() {
-        val mockWeatherService = MockServiceUI()
-        val mockWeatherData = WeatherMetaData(
+    @Before
+    fun setup() {
+        context = ApplicationProvider.getApplicationContext()
+        mockService = MockServiceUI()
+        viewModel = WeatherViewModel(mockService)
+        mockWeatherData = WeatherMetaData(
             coord = Coord(0.0, 0.0),
             weather = listOf(
                 Weather(
@@ -135,10 +78,180 @@ class FirstScreenTest {
             name = "Saint Paul",
             cod = 0
         )
-        mockWeatherService.mockWeatherResponse = Response.success(mockWeatherData)
-        val viewModel = WeatherViewModel(mockWeatherService)
+        sampleZip = "12345"
+        uiDevice = UiDevice.getInstance(getInstrumentation())
+    }
 
-        // Trigger data loading
+
+
+    @Test
+    fun appTitleIsDisplayed() {
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("WeatherSeer").assertIsDisplayed()
+    }
+
+
+
+    @Test
+    fun textFieldSearchButtonLocationButtonDisplayed() {
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        composeTestRule.onNodeWithTag("textField").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Location").assertIsDisplayed()
+        composeTestRule.onNodeWithText("16-Day").assertIsDisplayed()
+    }
+
+
+
+    // Text Field and Search Button Tests
+
+
+    @Test
+    fun textFieldExceedsFiveDisplaysToast() {
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("").performTextInput("123456")
+    }
+
+
+
+    @Test
+    fun searchButtonClickedWithValidZipNavigatesToForecastScreen() {
+
+        var navigateForecastClicked = false
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = { navigateForecastClicked = true },
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("").performTextInput("12345")
+        composeTestRule.onNodeWithText("16-Day").performClick()
+        Assert.assertEquals(true, navigateForecastClicked)
+    }
+
+
+
+    @Test
+    fun searchButtonClickedWithInvalidZipDisplaysToastAndNotNavigate() {
+
+        var navigateForecastClicked = false
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = { navigateForecastClicked = true },
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText("").performTextInput("1234")
+        composeTestRule.onNodeWithText("16-Day").performClick()
+        Assert.assertEquals(false, navigateForecastClicked)
+    }
+
+
+
+    // Notification Tests
+
+
+
+    //
+
+
+
+    // Tests for Displaying weather Data
+
+
+
+    @Test
+    fun hasLocationWeatherDataSucceededAndDisplayed() {
+
+        mockService.mockWeatherResponse = Response.success(mockWeatherData)
+        viewModel.getData(0.0, 0.0)
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        //composeTestRule.onNodeWithText(" Saint Paul, US").assertIsDisplayed()
+        composeTestRule.onNodeWithText("25°").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Feels like 0°").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Low 0°").assertIsDisplayed()
+        composeTestRule.onNodeWithText("High 0°").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Humidity 0% ").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Pressure 1000 hPa").assertIsDisplayed()
+        composeTestRule.onNodeWithText("Sunny").assertIsDisplayed()
+    }
+
+
+
+    @Test
+    fun hasLocationWeatherDataFailedErrorMessageDisplayed() {
+
+        mockService.mockWeatherResponse = Response.error(400, "".toResponseBody("text/plain".toMediaTypeOrNull()))
+        viewModel.getData(0.0, 0.0)
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        composeTestRule.onNodeWithText(context.getString(R.string.errMessage)).assertIsDisplayed()
+    }
+
+
+
+    @Test
+    fun noLocationWeatherDataSucceededAndDisplayed() {
+
+        mockService.mockWeatherResponse = Response.success(mockWeatherData)
         viewModel.getData("12345")
 
         composeTestRule.setContent {
@@ -161,14 +274,13 @@ class FirstScreenTest {
         composeTestRule.onNodeWithText("Sunny").assertIsDisplayed()
     }
 
-    @Test
-    fun weatherDataFailedErrorMessageDisplayed() {
-        val mockWeatherService = MockServiceUI()
-        val sampleErr = ""
 
-        // How to make it display a message
-        mockWeatherService.mockWeatherResponse = Response.error(400, sampleErr.toResponseBody(null))
-        val viewModel = WeatherViewModel(mockWeatherService)
+
+    @Test
+    fun noLocationWeatherDataFailedErrorMessageDisplayed() {
+
+        mockService.mockWeatherResponse = Response.error(400, "".toResponseBody("text/plain".toMediaTypeOrNull()))
+        viewModel.getData("12345")
 
         composeTestRule.setContent {
             FirstScreen(
@@ -180,53 +292,84 @@ class FirstScreenTest {
             )
         }
 
-        composeTestRule.onNodeWithText(sampleErr).assertIsDisplayed()
-
-    }
-}
-
-/**
-import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
-import androidx.lifecycle.MutableLiveData
-import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestDispatcher
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Rule
-import retrofit2.Response
-
-@RunWith(AndroidJUnit4::class)
-class FirstScreenTest {
-
-    @get:Rule
-    val composeTestRule = createComposeRule()
-
-    private lateinit var viewModel: WeatherViewModel
-    private lateinit var service: MockServiceUI
-
-    private val sampleZip = "55155"
-    private val sampleLat = 0.0
-    private val sampleLon = 0.0
-    private val sampleAppId = ""
-    private val sampleUnits = "imperial"
-    private val sampleDays = 16
-    private val sampleErr = ""
-
-
-    @Before
-    fun setup() {
-        service = MockServiceUI()
-        viewModel = WeatherViewModel(service)
+        composeTestRule.onNodeWithText(context.getString(R.string.errMessage)).assertIsDisplayed()
     }
 
+
+
+    // Location Button/Permission Tests
+
+
+    // Requires clicking on don't allow for the permissions on the emulator
+    @Test
+    fun locationButtonClickedDisplaysPermissionsAndRationaleWhenDenied() {
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        // Must click don't allow for both or either permissions
+        composeTestRule.onNodeWithContentDescription(context.getString(R.string.locationIcon)).performClick()
+        uiDevice.wait(Until.gone(By.textContains("Allow")), 8000)
+
+        val permissionDialog = uiDevice.wait(Until.findObject(By.textContains("Allow")), 8000)
+        assert(permissionDialog != null)
+        composeTestRule.onNodeWithText(context.getString(R.string.rationaleTitle)).assertIsDisplayed()
+    }
+
+
+
+    // Requires clicking on don't allow for the permissions on the emulator
+    @Test
+    fun locationButtonClickedDisplaysRationaleWhenDeniedAndPermissionsAgainWhenOk() {
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        // Must click don't allow for both or either permissions
+        composeTestRule.onNodeWithContentDescription(context.getString(R.string.locationIcon)).performClick()
+        uiDevice.wait(Until.gone(By.textContains("Allow")), 10000)
+
+        composeTestRule.onNodeWithText(context.getString(R.string.alertOk)).performClick()
+    }
+
+
+    // Requires clicking on don't allow for the permissions on the emulator
+    @Test
+    fun locationButtonClickedDisplaysWeatherDataSucceededWhenAllowedAndNoRationale() {
+
+        composeTestRule.setContent {
+            FirstScreen(
+                viewModel = viewModel,
+                onNavigateForecastClicked = {},
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
+        }
+
+        // Must click on allow for both permissions
+        composeTestRule.onNodeWithContentDescription(context.getString(R.string.locationIcon)).performClick()
+        uiDevice.wait(Until.gone(By.textContains("Allow")), 8000)
+
+        mockService.mockWeatherResponse = Response.success(mockWeatherData)
+        viewModel.getData(0.0, 0.0)
+
+        composeTestRule.onNodeWithText("Sunny").assertIsDisplayed()
+        val rationaleNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.rationaleTitle)))
+        Assert.assertEquals(0, rationaleNodes.fetchSemanticsNodes().size)
+    }
 }
-        **/

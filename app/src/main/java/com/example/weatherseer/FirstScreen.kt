@@ -307,13 +307,13 @@ fun TextButton(onNavigateForecastClicked: () -> Unit, hasLocation: MutableState<
             modifier = Modifier
                 .height(50.dp)
                 .width(210.dp)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 20.dp)
+                .testTag("textField"),
             colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White),
             shape = RoundedCornerShape(12.dp)
         )
         Button(
             onClick = {
-
                 if (hasLocation.value) {
                     if (zipEntry == "") {
                         zipcode = zipEntry
@@ -352,8 +352,7 @@ fun AppTitle() {
             modifier = Modifier
                 .background(Color(0xFFa121ca))
                 .fillMaxWidth()
-                .padding(18.dp)
-                .testTag("AppTitle"),
+                .padding(18.dp),
             fontSize = 24.sp,
             color = Color.White,
             textAlign = TextAlign.Center

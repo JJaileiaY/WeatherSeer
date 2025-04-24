@@ -5,19 +5,16 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="FirstScreenTest">
+      <SelectionState runConfigName="hasLocationWeatherDataSucceededAndDisplayed()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="testForecastScreen_cityState()">
+      <SelectionState runConfigName="noLocationLocationButtonClickedDisplaysPermissionsAndRationaleWhenDenied()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="testForecastScreen_forecastIcon()">
+      <SelectionState runConfigName="deniedLocationLocationButtonClickedDisplaysRationale()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="testForecastScreen_forecastTemp()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="weatherDataSucceededAndDisplayed()">
+      <SelectionState runConfigName="locationButtonClickedDisplaysRationaleWhenDeniedAndPermissionsAgainWhenOk()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

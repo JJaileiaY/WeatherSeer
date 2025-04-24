@@ -34,7 +34,6 @@ class WeatherViewModelTest {
     private val sampleDays = 16
     private val sampleErr = ""
 
-
     @OptIn(ExperimentalCoroutinesApi::class)
     @Before
     fun setup() {
@@ -44,9 +43,11 @@ class WeatherViewModelTest {
         //viewModel = WeatherViewModel(service)
         }
 
-    ///////// got rid of dispatcher in runTest() //// all working
 
+    // Fix variables ^^, and error message, and getQueryInfo()
     // Unit Tests for getData(zip)
+
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
@@ -96,9 +97,11 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.weatherResult.value)
     }
 
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getData try fails returns error`() = runTest(dispatcher) {
+    fun `getData try fails returns error`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)
@@ -115,9 +118,11 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.weatherResult.value)
     }
 
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getData exception returns error`() = runTest(dispatcher) {
+    fun `getData exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
         val service = MockService()
@@ -134,12 +139,14 @@ class WeatherViewModelTest {
     }
 
 
+
     // Unit Tests for getData(lat, lon)
+
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getData(lat, lon) try is successful`() = runTest(dispatcher) {
+    fun `getData(lat, lon) try is successful`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)
@@ -185,9 +192,11 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.weatherResult.value)
     }
 
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getData(lat, lon) try fails returns error`() = runTest(dispatcher) {
+    fun `getData(lat, lon) try fails returns error`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)
@@ -204,9 +213,11 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.weatherResult.value)
     }
 
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getData(lat, lon) exception returns error`() = runTest(dispatcher) {
+    fun `getData(lat, lon) exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
         val service = MockService()
@@ -223,12 +234,14 @@ class WeatherViewModelTest {
     }
 
 
+
     // Unit Tests for getForecastData(zip)
+
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getForecastData try is successful`() = runTest(dispatcher) {
+    fun `getForecastData try is successful`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)
@@ -256,9 +269,11 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.forecastResult.value)
     }
 
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getForecastData try fails returns error`() = runTest(dispatcher) {
+    fun `getForecastData try fails returns error`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)
@@ -275,9 +290,11 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.forecastResult.value)
     }
 
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getForecastData exception returns error`() = runTest(dispatcher) {
+    fun `getForecastData exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
         val service = MockService()
@@ -294,12 +311,14 @@ class WeatherViewModelTest {
     }
 
 
+
     // Unit Tests for getForecastData(lat, lon)
+
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getForecast(lat, lon) try is successful`() = runTest(dispatcher) {
+    fun `getForecast(lat, lon) try is successful`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)
@@ -327,9 +346,12 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.forecastResult.value)
     }
 
+
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getForecast(lat, lon) try fails returns error`() = runTest(dispatcher) {
+    fun `getForecast(lat, lon) try fails returns error`() = runTest {
 
         val service = MockService()
         viewModel = WeatherViewModel(service)
@@ -346,9 +368,12 @@ class WeatherViewModelTest {
         assertEquals(expectedResult, viewModel.forecastResult.value)
     }
 
+
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
-    fun `getForecast(lat, lon) exception returns error`() = runTest(dispatcher) {
+    fun `getForecast(lat, lon) exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
         val service = MockService()
