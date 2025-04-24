@@ -16,7 +16,7 @@ import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -82,15 +82,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // ViewModels for current data and forecast data
-        //val weatherViewModel = ViewModelProvider(this, RetrofitInstance.weatherService)[WeatherViewModel::class.java]
-        //val forecastViewModel = ViewModelProvider(this)[WeatherViewModel::class.java]
-        val weatherViewModel = WeatherViewModel(RetrofitInstance.weatherService)
-        val forecastViewModel = WeatherViewModel(RetrofitInstance.weatherService)
+        val weatherViewModel = WeatherViewModel(
+            RetrofitInstance.weatherService,
+            this.getString(R.string.appid),
+            this.getString(R.string.units),
+            this.getString(R.string.errMessage))
+        val forecastViewModel = WeatherViewModel(
+            RetrofitInstance.weatherService,
+            this.getString(R.string.appid),
+            this.getString(R.string.units),
+            this.getString(R.string.errMessage))
 
 
-        val context = applicationContext
-        val currentScreen = context.getString(R.string.currentScreen)
-        val forecastScreen = context.getString(R.string.forecastScreen)
+        val currentScreen = this.getString(R.string.currentScreen)
+        val forecastScreen = this.getString(R.string.forecastScreen)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
@@ -113,9 +118,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val navController = rememberNavController()
+
             WeatherSeerTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     AppNavigation(
+                        navController,
                         weatherViewModel,
                         forecastViewModel,
                         currentScreen,
@@ -134,6 +142,7 @@ class MainActivity : ComponentActivity() {
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     @Composable
     fun AppNavigation(
+        navController: NavHostController,
         currentViewModel: WeatherViewModel,
         forecastViewModel: WeatherViewModel,
         currentScreen: String,
@@ -143,7 +152,6 @@ class MainActivity : ComponentActivity() {
         startLocationUpdates: () -> Unit,
 
         ) {
-        val navController = rememberNavController()
 
         NavHost(navController = navController, startDestination = currentScreen) {
             composable(currentScreen) {

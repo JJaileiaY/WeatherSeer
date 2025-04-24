@@ -28,13 +28,15 @@ class ForecastScreenTest {
     private lateinit var viewModel: WeatherViewModel
     private lateinit var mockForecastData: ForecastMetaData
     private lateinit var sampleZip: String
-
+    private val sampleAppId = ""
+    private val sampleUnits = ""
+    private val sampleErr = ""
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         mockService = MockServiceUI()
-        viewModel = WeatherViewModel(mockService)
+        viewModel = WeatherViewModel(mockService, sampleAppId, sampleUnits, sampleErr)
         mockForecastData = ForecastMetaData(
             city = City(
                 0, "Saint Paul",
@@ -61,6 +63,7 @@ class ForecastScreenTest {
     }
 
 
+
     @Test
     fun forecastScreenTitleDisplayed() {
 
@@ -77,6 +80,7 @@ class ForecastScreenTest {
 
         composeTestRule.onNodeWithText(context.getString(R.string.forecastTitle)).assertExists()
     }
+
 
 
     @Test
@@ -153,6 +157,7 @@ class ForecastScreenTest {
 
         composeTestRule.onNodeWithText("Saint Paul, US").assertIsDisplayed()
     }
+
 
 
     @Test

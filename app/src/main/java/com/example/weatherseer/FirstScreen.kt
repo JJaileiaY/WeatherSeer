@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import java.security.AccessController.getContext
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -66,7 +67,6 @@ fun FirstScreen(
     startLocationUpdates: () -> Unit)
 {
     // Fetch Weather Data
-    viewModel.GetQueryInfo()
     var weatherResult: State<NetworkResponse<WeatherMetaData>?>
 
     val context = LocalContext.current
@@ -135,6 +135,7 @@ fun FirstScreen(
             startLocationUpdates()
             viewModel.getData(lat, lon)
             weatherResult = viewModel.weatherResult.observeAsState()
+            showNotification(context, weatherResult)
         }
         else {
             viewModel.getData(zipcode)

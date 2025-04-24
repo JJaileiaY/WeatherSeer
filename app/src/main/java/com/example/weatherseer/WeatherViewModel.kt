@@ -1,7 +1,5 @@
 package com.example.weatherseer
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,27 +7,17 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
 class WeatherViewModel(
-    private val weatherService: WeatherService): ViewModel() {
-
-    //private val weatherService = RetrofitInstance.weatherService
+    private val weatherService: WeatherService,
+    private val appid: String,
+    private val units: String,
+    private val errMessage: String
+    ): ViewModel() {
 
     // LiveData variables
     private val _weatherResult = MutableLiveData<NetworkResponse<WeatherMetaData>>()
     val weatherResult: LiveData<NetworkResponse<WeatherMetaData>> = _weatherResult
     private val _forecastResult = MutableLiveData<NetworkResponse<ForecastMetaData>>()
     val forecastResult: LiveData<NetworkResponse<ForecastMetaData>> = _forecastResult
-
-    // Variables to hold query info.
-    private var appid = ""
-    private var units = ""
-    private var errMessage = ""
-
-    @Composable
-    fun GetQueryInfo() {
-        appid = stringResource(R.string.appid)
-        units = stringResource(R.string.units)
-        errMessage = stringResource(R.string.errMessage)
-    }
 
     // Get the weather data, determine if success or not.
     fun getData(zip: String) {

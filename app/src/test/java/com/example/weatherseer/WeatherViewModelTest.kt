@@ -8,6 +8,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Test
 import org.junit.Assert.*
@@ -24,9 +25,9 @@ class WeatherViewModelTest {
 
     private lateinit var viewModel: WeatherViewModel
     private lateinit var dispatcher: TestDispatcher
-    //private lateinit var service: MockService
+    private lateinit var service: MockService
 
-    private val sampleZip = "55155"
+    private val sampleZip = "12345"
     private val sampleLat = 0.0
     private val sampleLon = 0.0
     private val sampleAppId = ""
@@ -39,12 +40,12 @@ class WeatherViewModelTest {
     fun setup() {
         dispatcher = UnconfinedTestDispatcher()
         Dispatchers.setMain(dispatcher)
-        //service = MockService()
-        //viewModel = WeatherViewModel(service)
+        service = MockService()
+        viewModel = WeatherViewModel(service, sampleAppId, sampleUnits, sampleErr)
         }
 
 
-    // Fix variables ^^, and error message, and getQueryInfo()
+
     // Unit Tests for getData(zip)
 
 
@@ -53,11 +54,8 @@ class WeatherViewModelTest {
     @Test
     fun `getData try is successful`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
         val sampleResponse = WeatherMetaData(
-            name = "Saint Paul",
+            name = "Minneapolis",
             coord = Coord(0.0, 0.0),
             weather = mutableListOf(),
             base = "",
@@ -103,14 +101,7 @@ class WeatherViewModelTest {
     @Test
     fun `getData try fails returns error`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
-        val errorResponse: Response<WeatherMetaData> = Response.error(400,
-            sampleErr.toResponseBody()
-        )
-
-        service.mockWeatherResponse = errorResponse
+        service.mockWeatherResponse = Response.error(400, sampleErr.toResponseBody("text/plain".toMediaTypeOrNull()))
         viewModel.getData(sampleZip)
         advanceUntilIdle()
 
@@ -125,8 +116,6 @@ class WeatherViewModelTest {
     fun `getData exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
 
         doAnswer { throw RuntimeException(sampleErr) }
             .`when`(mockService).getWeather(sampleZip, sampleAppId, sampleUnits)
@@ -148,11 +137,8 @@ class WeatherViewModelTest {
     @Test
     fun `getData(lat, lon) try is successful`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
         val sampleResponse = WeatherMetaData(
-            name = "Saint Paul",
+            name = "Minneapolis",
             coord = Coord(0.0, 0.0),
             weather = mutableListOf(),
             base = "",
@@ -198,14 +184,7 @@ class WeatherViewModelTest {
     @Test
     fun `getData(lat, lon) try fails returns error`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
-        val errorResponse: Response<WeatherMetaData> = Response.error(400,
-            sampleErr.toResponseBody()
-        )
-
-        service.mockWeatherResponse = errorResponse
+        service.mockWeatherResponse = Response.error(400, sampleErr.toResponseBody("text/plain".toMediaTypeOrNull()))
         viewModel.getData(sampleLat, sampleLon)
         advanceUntilIdle()
 
@@ -220,8 +199,6 @@ class WeatherViewModelTest {
     fun `getData(lat, lon) exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
 
         doAnswer { throw RuntimeException(sampleErr) }
             .`when`(mockService).getWeatherLL(sampleLat, sampleLon, sampleAppId, sampleUnits)
@@ -243,13 +220,10 @@ class WeatherViewModelTest {
     @Test
     fun `getForecastData try is successful`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
         val sampleResponse = ForecastMetaData(
             city = City(
                 id = 0,
-                name = "Saint Paul",
+                name = "Minneapolis",
                 coord = Coord(0.0, 0.0),
                 country = "",
                 population = 0,
@@ -275,14 +249,7 @@ class WeatherViewModelTest {
     @Test
     fun `getForecastData try fails returns error`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
-        val errorResponse: Response<ForecastMetaData> = Response.error(400,
-            sampleErr.toResponseBody()
-        )
-
-        service.mockForecastResponse = errorResponse
+        service.mockWeatherResponse = Response.error(400, sampleErr.toResponseBody("text/plain".toMediaTypeOrNull()))
         viewModel.getForecastData(sampleZip)
         advanceUntilIdle()
 
@@ -297,8 +264,6 @@ class WeatherViewModelTest {
     fun `getForecastData exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
 
         doAnswer { throw RuntimeException(sampleErr) }
             .`when`(mockService).getForecast(sampleZip, sampleAppId, sampleDays, sampleUnits)
@@ -320,13 +285,10 @@ class WeatherViewModelTest {
     @Test
     fun `getForecast(lat, lon) try is successful`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
         val sampleResponse = ForecastMetaData(
             city = City(
                 id = 0,
-                name = "Saint Paul",
+                name = "Minneapolis",
                 coord = Coord(0.0, 0.0),
                 country = "",
                 population = 0,
@@ -353,14 +315,7 @@ class WeatherViewModelTest {
     @Test
     fun `getForecast(lat, lon) try fails returns error`() = runTest {
 
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
-
-        val errorResponse: Response<ForecastMetaData> = Response.error(400,
-            sampleErr.toResponseBody()
-        )
-
-        service.mockForecastResponse = errorResponse
+        service.mockWeatherResponse = Response.error(400, sampleErr.toResponseBody("text/plain".toMediaTypeOrNull()))
         viewModel.getForecastData(sampleLat, sampleLon)
         advanceUntilIdle()
 
@@ -376,8 +331,6 @@ class WeatherViewModelTest {
     fun `getForecast(lat, lon) exception returns error`() = runTest {
 
         val mockService: WeatherService = mock()
-        val service = MockService()
-        viewModel = WeatherViewModel(service)
 
         doAnswer { throw RuntimeException(sampleErr) }
             .`when`(mockService).getForecastLL(sampleLat, sampleLon, sampleAppId, sampleDays, sampleUnits)

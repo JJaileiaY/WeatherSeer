@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.play.services.location)
     implementation(libs.androidx.ui.test.junit4.android)
+    implementation(libs.androidx.navigation.testing)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.coroutines.test)
