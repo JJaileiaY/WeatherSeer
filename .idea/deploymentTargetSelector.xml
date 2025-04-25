@@ -5,19 +5,19 @@
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="locationButtonClickedDisplaysPermissionsAndRationaleWhenDenied()">
+      <SelectionState runConfigName="noLocationForecastDataFailedAlertDisplayedAndNavigatesBack()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="locationButtonClickedDisplaysRationaleWhenDeniedAndPermissionsAgainWhenOk()">
+      <SelectionState runConfigName="ForecastScreenTest">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="FirstScreenTest">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
       <SelectionState runConfigName="locationButtonClickedDisplaysWeatherDataSucceededWhenAllowedAndNoRationale()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="isNotificationDisplayed()">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
-      <SelectionState runConfigName="textFieldExceedsFiveDisplaysToast()">
+      <SelectionState runConfigName="locationButtonClickedDisplaysRationaleWhenDeniedAndPermissionsAgainWhenOk()">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

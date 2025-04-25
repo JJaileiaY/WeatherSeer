@@ -1,11 +1,7 @@
 package com.example.weatherseer
 
-import android.Manifest
 import android.app.NotificationManager
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
-import android.util.Log
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTextInput
@@ -14,9 +10,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.core.content.ContextCompat
-import androidx.navigation.NavController
 import androidx.navigation.compose.ComposeNavigator
+import androidx.navigation.testing.TestNavHostController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
 import androidx.test.uiautomator.By
@@ -24,6 +19,7 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.ResponseBody.Companion.toResponseBody
+import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Rule
@@ -32,29 +28,38 @@ import retrofit2.Response
 
 class FirstScreenTest {
 
-    // Test notifications
+    /** Please run the 4 tests that use UIDevice individually, as the emulator may mess up/confuse
+        the permission dialogs and cause them to fail. They are the last 4 functions in the class
+        and they should be passing individually.
+     */
 
     @get:Rule
     val composeTestRule = createComposeRule()
 
     private lateinit var context: Context
     private lateinit var mockService: MockServiceUI
-    private lateinit var navController: NavController
+    private lateinit var navController: TestNavHostController
     private lateinit var viewModel: WeatherViewModel
+    private lateinit var forecastViewModel: WeatherViewModel
     private lateinit var mockWeatherData: WeatherMetaData
     private lateinit var uiDevice: UiDevice
     private val sampleZip = "12345"
     private val sampleAppId = ""
     private val sampleUnits = ""
     private val sampleErr = "Couldn't find what you were looking for."
+    private val currentScreen = "first_screen"
+    private val forecastScreen = "forecast_screen"
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         mockService = MockServiceUI()
-        navController = androidx.navigation.testing.TestNavHostController(ApplicationProvider.getApplicationContext())
+        navController = TestNavHostController(ApplicationProvider.getApplicationContext())
         navController.navigatorProvider.addNavigator(ComposeNavigator())
+        uiDevice = UiDevice.getInstance(getInstrumentation())
+
         viewModel = WeatherViewModel(mockService, sampleAppId, sampleUnits, sampleErr)
+        forecastViewModel = WeatherViewModel(mockService, sampleAppId, sampleUnits, sampleErr)
         mockWeatherData = WeatherMetaData(
             coord = Coord(0.0, 0.0),
             weather = listOf(
@@ -90,7 +95,12 @@ class FirstScreenTest {
             name = "Minneapolis",
             cod = 0
         )
-        uiDevice = UiDevice.getInstance(getInstrumentation())
+        uiDevice.waitForIdle(6000)
+    }
+
+    @After
+    fun resetDevice() {
+        uiDevice.pressHome()
     }
 
 
@@ -148,8 +158,8 @@ class FirstScreenTest {
                 startLocationUpdates = {}
             )
         }
-
-        composeTestRule.onNodeWithText("").performTextInput("123456")
+        // Try to input 6-digit zip and assert toast appeared
+        composeTestRule.onNodeWithTag("textField").performTextInput("123456")
         val toastAppeared = uiDevice.wait(Until.hasObject(By.text(context.getString(R.string.toastLength))), 3000)
         assert(toastAppeared != null)
     }
@@ -159,21 +169,23 @@ class FirstScreenTest {
     @Test
     fun searchButtonClickedWithValidZipNavigatesToForecastScreen() {
 
-        var navigateForecastClicked = false
-
         composeTestRule.setContent {
-            FirstScreen(
-                viewModel = viewModel,
-                onNavigateForecastClicked = { navigateForecastClicked = true },
+            AppNavigation(
+                navController = navController,
+                currentViewModel = viewModel,
+                forecastViewModel = forecastViewModel,
+                currentScreen = currentScreen,
+                forecastScreen = forecastScreen,
                 lat = 0.0,
                 lon = 0.0,
                 startLocationUpdates = {}
             )
         }
-
-        composeTestRule.onNodeWithText("").performTextInput("12345")
+        // Navigate and assert current screen
+        composeTestRule.onNodeWithTag("textField").performTextInput("12345")
         composeTestRule.onNodeWithText("16-Day").performClick()
-        Assert.assertEquals(true, navigateForecastClicked)
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        Assert.assertEquals(forecastScreen, currentRoute)
     }
 
 
@@ -181,23 +193,27 @@ class FirstScreenTest {
     @Test
     fun searchButtonClickedWithInvalidZipDisplaysToastAndNotNavigate() {
 
-        var navigateForecastClicked = false
-
         composeTestRule.setContent {
-            FirstScreen(
-                viewModel = viewModel,
-                onNavigateForecastClicked = { navigateForecastClicked = true },
+            AppNavigation(
+                navController = navController,
+                currentViewModel = viewModel,
+                forecastViewModel = forecastViewModel,
+                currentScreen = currentScreen,
+                forecastScreen = forecastScreen,
                 lat = 0.0,
                 lon = 0.0,
                 startLocationUpdates = {}
             )
         }
-
+        // Input invalid zip
         composeTestRule.onNodeWithText("").performTextInput("1234")
         composeTestRule.onNodeWithText("16-Day").performClick()
+
+        // Assert toast appeared and did not navigate
         val toastAppeared = uiDevice.wait(Until.hasObject(By.text(context.getString(R.string.toastInvalid))), 3000)
         assert(toastAppeared != null)
-        Assert.assertEquals(false, navigateForecastClicked)
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        assert(currentRoute != forecastScreen)
     }
 
 
@@ -322,6 +338,7 @@ class FirstScreenTest {
         composeTestRule.onNodeWithContentDescription(context.getString(R.string.locationIcon)).performClick()
         val permissionDialog = uiDevice.wait(Until.findObject(By.textContains("Allow")), 8000)
         uiDevice.findObject(By.textStartsWith("Don")).click()
+        Thread.sleep(3000)
         uiDevice.findObject(By.textStartsWith("Don")).click()
 
         // Assert that permissions and rationale were displayed
@@ -346,6 +363,7 @@ class FirstScreenTest {
         // Deny permissions
         composeTestRule.onNodeWithContentDescription(context.getString(R.string.locationIcon)).performClick()
         uiDevice.findObject(By.textStartsWith("Don")).click()
+        Thread.sleep(3000)
         uiDevice.findObject(By.textStartsWith("Don")).click()
 
         // Click ok on rationale to relaunch permissions
@@ -391,7 +409,7 @@ class FirstScreenTest {
 
 
     @Test
-    fun isNotificationDisplayed() {
+    fun notificationIsDisplayed() {
 
         composeTestRule.setContent {
             FirstScreen(

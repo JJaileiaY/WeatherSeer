@@ -5,8 +5,12 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.navigation.compose.ComposeNavigator
+import androidx.navigation.testing.TestNavHostController
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -25,18 +29,26 @@ class ForecastScreenTest {
 
     private lateinit var context: Context
     private lateinit var mockService: MockServiceUI
+    private lateinit var navController: TestNavHostController
     private lateinit var viewModel: WeatherViewModel
+    private lateinit var forecastViewModel: WeatherViewModel
     private lateinit var mockForecastData: ForecastMetaData
-    private lateinit var sampleZip: String
+    private var sampleZip = "12345"
     private val sampleAppId = ""
     private val sampleUnits = ""
     private val sampleErr = ""
+    private val currentScreen = "first_screen"
+    private val forecastScreen = "forecast_screen"
 
     @Before
     fun setup() {
         context = ApplicationProvider.getApplicationContext()
         mockService = MockServiceUI()
+        navController = TestNavHostController(ApplicationProvider.getApplicationContext())
+        navController.navigatorProvider.addNavigator(ComposeNavigator())
+
         viewModel = WeatherViewModel(mockService, sampleAppId, sampleUnits, sampleErr)
+        forecastViewModel = WeatherViewModel(mockService, sampleAppId, sampleUnits, sampleErr)
         mockForecastData = ForecastMetaData(
             city = City(
                 0, "Saint Paul",
@@ -59,7 +71,6 @@ class ForecastScreenTest {
                 )
             )
         )
-        sampleZip = "12345"
     }
 
 
@@ -86,22 +97,30 @@ class ForecastScreenTest {
     @Test
     fun forecastBackButtonDisplayedAndNavigatesBack() {
 
-        var navigateBackClicked = false
+        mockService.mockForecastResponse = Response.success(mockForecastData)
+        viewModel.getData(sampleZip)
 
         composeTestRule.setContent {
-                ForecastScreen(
-                    viewModel = viewModel,
-                    zip = sampleZip,
-                    onNavigateBackClicked = { navigateBackClicked = true },
-                    lat = 0.0,
-                    lon = 0.0,
-                    startLocationUpdates = {}
-                )
+            AppNavigation(
+                navController = navController,
+                currentViewModel = viewModel,
+                forecastViewModel = forecastViewModel,
+                currentScreen = currentScreen,
+                forecastScreen = forecastScreen,
+                lat = 0.0,
+                lon = 0.0,
+                startLocationUpdates = {}
+            )
         }
+        // Started with firstScreen, so go to forecastScreen
+        composeTestRule.onNodeWithTag("textField").performTextInput("12345")
+        composeTestRule.onNodeWithText("16-Day").performClick()
 
+        // Click back and assert if current route is first screen
         composeTestRule.onNodeWithText(context.getString(R.string.back)).assertIsDisplayed()
         composeTestRule.onNodeWithText(context.getString(R.string.back)).performClick()
-        Assert.assertEquals(true, navigateBackClicked)
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        Assert.assertEquals(currentScreen, currentRoute)
     }
 
 
@@ -125,11 +144,12 @@ class ForecastScreenTest {
                 startLocationUpdates = {}
             )
         }
-
+        // Find the alert
         val alertTitleNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertTitle)))
         val alertMessageNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertMessage)))
         val alertOkNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertOk)))
 
+        // Assert if the alert exists
         Assert.assertEquals(0, alertTitleNodes.fetchSemanticsNodes().size)
         Assert.assertEquals(0, alertMessageNodes.fetchSemanticsNodes().size)
         Assert.assertEquals(0, alertOkNodes.fetchSemanticsNodes().size)
@@ -239,32 +259,39 @@ class ForecastScreenTest {
     @Test
     fun noLocationForecastDataFailedAlertDisplayedAndNavigatesBack() {
 
-        var navigateBackClicked = false
-
         mockService.mockForecastResponse = Response.error(404, "".toResponseBody(null))
         viewModel.getForecastData(sampleZip)
 
         composeTestRule.setContent {
-            ForecastScreen(
-                viewModel = viewModel,
-                zip = sampleZip,
-                onNavigateBackClicked = { navigateBackClicked = true },
+            AppNavigation(
+                navController = navController,
+                currentViewModel = viewModel,
+                forecastViewModel = forecastViewModel,
+                currentScreen = currentScreen,
+                forecastScreen = forecastScreen,
                 lat = 0.0,
                 lon = 0.0,
                 startLocationUpdates = {}
             )
         }
+        // Started with firstScreen, so go to forecastScreen with invalid zip
+        composeTestRule.onNodeWithTag("textField").performTextInput("11111")
+        composeTestRule.onNodeWithText("16-Day").performClick()
 
+        // Find the alert
         val alertTitleNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertTitle)))
         val alertMessageNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertMessage)))
         val alertOkNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertOk)))
 
+        // Assert if the alert exists/is displayed
         Assert.assertEquals(1, alertTitleNodes.fetchSemanticsNodes().size)
         Assert.assertEquals(1, alertMessageNodes.fetchSemanticsNodes().size)
         Assert.assertEquals(1, alertOkNodes.fetchSemanticsNodes().size)
 
+        // Click okay and assert if navigated back
         composeTestRule.onNodeWithText(context.getString(R.string.alertOk)).performClick()
-        Assert.assertEquals(true, navigateBackClicked)
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        Assert.assertEquals(currentScreen, currentRoute)
     }
 
 
@@ -272,32 +299,39 @@ class ForecastScreenTest {
     @Test
     fun hasLocationForecastDataFailedAlertDisplayedAndNavigatesBack() {
 
-        var navigateBackClicked = false
-
         mockService.mockForecastResponse = Response.error(404, "".toResponseBody(null))
         viewModel.getForecastData(0.0, 0.0)
 
         composeTestRule.setContent {
-            ForecastScreen(
-                viewModel = viewModel,
-                zip = sampleZip,
-                onNavigateBackClicked = { navigateBackClicked = true },
+            AppNavigation(
+                navController = navController,
+                currentViewModel = viewModel,
+                forecastViewModel = forecastViewModel,
+                currentScreen = currentScreen,
+                forecastScreen = forecastScreen,
                 lat = 0.0,
                 lon = 0.0,
                 startLocationUpdates = {}
             )
         }
+        // Started with firstScreen, so go to forecastScreen
+        composeTestRule.onNodeWithTag("textField").performTextInput("11111")
+        composeTestRule.onNodeWithText("16-Day").performClick()
 
+        // Find the alert
         val alertTitleNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertTitle)))
         val alertMessageNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertMessage)))
         val alertOkNodes = composeTestRule.onAllNodes(hasText(context.getString(R.string.alertOk)))
 
+        // Asserts if the alert exists/is displayed
         Assert.assertEquals(1, alertTitleNodes.fetchSemanticsNodes().size)
         Assert.assertEquals(1, alertMessageNodes.fetchSemanticsNodes().size)
         Assert.assertEquals(1, alertOkNodes.fetchSemanticsNodes().size)
 
+        // Click ok and assert if navigated back
         composeTestRule.onNodeWithText(context.getString(R.string.alertOk)).performClick()
-        Assert.assertEquals(true, navigateBackClicked)
+        val currentRoute = navController.currentBackStackEntry?.destination?.route
+        Assert.assertEquals(currentScreen, currentRoute)
     }
 
 }

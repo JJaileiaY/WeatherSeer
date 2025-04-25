@@ -10,15 +10,11 @@ import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.weatherseer.ui.theme.WeatherSeerTheme
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -101,8 +97,9 @@ class MainActivity : ComponentActivity() {
 
         setContent {
 
-            // LocationCallBack sometimes doesn't work anymore when switching the permissions back and forth.
-            // Try Resetting the emulator and wait for 1 min.
+            /** LocationCallBack sometimes doesn't work anymore when switching the permissions back and forth.
+                Try rerunning or resetting the emulator and wait for 1 min.
+            **/
 
             var latitude by remember { mutableDoubleStateOf(0.0) }
             var longitude by remember { mutableDoubleStateOf(0.0) }
@@ -132,49 +129,6 @@ class MainActivity : ComponentActivity() {
                         longitude
                     ) { startLocationUpdates() }
                 }
-            }
-        }
-    }
-
-
-
-    // Navigation
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    @Composable
-    fun AppNavigation(
-        navController: NavHostController,
-        currentViewModel: WeatherViewModel,
-        forecastViewModel: WeatherViewModel,
-        currentScreen: String,
-        forecastScreen: String,
-        lat: Double,
-        lon: Double,
-        startLocationUpdates: () -> Unit,
-
-        ) {
-
-        NavHost(navController = navController, startDestination = currentScreen) {
-            composable(currentScreen) {
-                FirstScreen(
-                    viewModel = currentViewModel,
-                    onNavigateForecastClicked = {
-                        navController.navigate(forecastScreen)
-                    },
-                    lat = lat,
-                    lon = lon,
-                    startLocationUpdates
-                )
-            }
-            composable(forecastScreen) {
-                ForecastScreen(
-                    forecastViewModel,
-                    zipcode,
-                    onNavigateBackClicked = { navController.popBackStack()
-                    },
-                    lat = lat,
-                    lon = lon,
-                    startLocationUpdates
-                )
             }
         }
     }

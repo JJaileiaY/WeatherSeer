@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.security.AccessController.getContext
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
