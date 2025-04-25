@@ -21,11 +21,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +44,6 @@ fun ForecastScreen(
     startLocationUpdates: () -> Unit)
 {
     // Fetch Weather Data
-    viewModel.GetQueryInfo()
     val forecastResult: State<NetworkResponse<ForecastMetaData>?>
 
     val context = LocalContext.current
@@ -64,26 +59,6 @@ fun ForecastScreen(
     else {
         viewModel.getForecastData(zip)
         forecastResult = viewModel.forecastResult.observeAsState()
-    }
-
-    // Create Alert Dialog if zipcode not found
-    var showZipNotFound by remember { mutableStateOf(false) }
-    if (showZipNotFound) {
-        AlertDialog(
-            onDismissRequest = {},
-            title = { Text(stringResource(R.string.alertTitle)) },
-            text = { Text(stringResource(R.string.alertMessage)) },
-            confirmButton = {
-                Button(onClick = {
-                    zipcode = context.getString(R.string.defaultZip)
-                    showZipNotFound = false
-                    onNavigateBackClicked()
-                }) {
-                    Text(stringResource(R.string.alertOk))
-                }
-            },
-            dismissButton = null
-        )
     }
 
     // Start of Forecast UI
@@ -139,7 +114,21 @@ fun ForecastScreen(
         // Evaluate Forecast Data
         when(val result = forecastResult.value) {
             is NetworkResponse.Error -> {
-                showZipNotFound = true
+
+                // Show Alert if zipcode was invalid/API fails
+                AlertDialog(
+                    onDismissRequest = {},
+                    title = { Text(stringResource(R.string.alertTitle)) },
+                    text = { Text(stringResource(R.string.alertMessage)) },
+                    confirmButton = {
+                        Button(onClick = {
+                            zipcode = context.getString(R.string.defaultZip)
+                            onNavigateBackClicked()
+                        }) {
+                            Text(stringResource(R.string.alertOk))
+                        } },
+                    dismissButton = null
+                )
             }
             is NetworkResponse.Success -> {
                 ForecastColumn(result.data.city.name, result.data.city.country, result.data.list)

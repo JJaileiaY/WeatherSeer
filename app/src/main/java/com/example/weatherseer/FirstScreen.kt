@@ -46,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
@@ -65,7 +66,6 @@ fun FirstScreen(
     startLocationUpdates: () -> Unit)
 {
     // Fetch Weather Data
-    viewModel.GetQueryInfo()
     var weatherResult: State<NetworkResponse<WeatherMetaData>?>
 
     val context = LocalContext.current
@@ -134,6 +134,7 @@ fun FirstScreen(
             startLocationUpdates()
             viewModel.getData(lat, lon)
             weatherResult = viewModel.weatherResult.observeAsState()
+            showNotification(context, weatherResult)
         }
         else {
             viewModel.getData(zipcode)
@@ -306,13 +307,13 @@ fun TextButton(onNavigateForecastClicked: () -> Unit, hasLocation: MutableState<
             modifier = Modifier
                 .height(50.dp)
                 .width(210.dp)
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = 20.dp)
+                .testTag("textField"),
             colors = TextFieldDefaults.colors().copy(focusedContainerColor = Color.White),
             shape = RoundedCornerShape(12.dp)
         )
         Button(
             onClick = {
-
                 if (hasLocation.value) {
                     if (zipEntry == "") {
                         zipcode = zipEntry
